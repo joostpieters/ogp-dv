@@ -1,12 +1,9 @@
-/**
- * 
- */
 package worms.model;
 
 /**
  * A class Facade which implements class IFacade
  * 
- * @author   Delphine Vandamme
+ * @author   Delphine Vandamme, Pieter Noyens
  */
 public class Facade implements IFacade {
 	
@@ -24,13 +21,32 @@ public class Facade implements IFacade {
 	 * The radius of the new worm (in meter)
 	 * @param name
 	 * The name of the new worm
+	 * @throws ModelException
 	 */
 	public Worm createWorm(double x, double y, double orientation, double radius,
-			String name) {
-		worm = new Worm(x, y, orientation, radius, name);
+			String name)
+	   throws ModelException {
+		try {
+			worm = new Worm(x, y, orientation, radius, name);
+		}
+		catch(IllegalPositionException exc) {
+			throw new ModelException("Not a valid position!");
+		}
+		catch(IllegalDirectionException exc) {
+			throw new ModelException("Not a valid direction!");
+		}
+		catch(IllegalRadiusException exc) {
+			throw new ModelException("Not a valid radius!");
+		}
+		catch(IllegalNameException exc) {
+			throw new ModelException("Not a valid name!");
+		}
 		return worm;
 	}
 	
+	/**
+	 * Variable registering the worm.
+	 */
 	private Worm worm;
 	
 	/**
@@ -44,7 +60,8 @@ public class Facade implements IFacade {
 	 * Moves the given worm by the given number of steps.
 	 */
 	public void move(Worm worm, int nbSteps) {
-		worm.move(nbSteps);		
+		worm.move(nbSteps);	
+		
 	}
 
 	/**
@@ -63,17 +80,33 @@ public class Facade implements IFacade {
 
 	/**
 	 * Makes the given worm jump.
+	 * 
+	 * @throws ModelException
 	 */
-	public void jump(Worm worm) {
-		worm.jump();
+	public void jump(Worm worm) 
+	   throws ModelException {
+		try {
+			worm.jump();
+		}
+		catch (IllegalJumpException exc) {
+			throw new ModelException("This worm cannot jump.");
+		}
 	}
 
 	/**
 	 * Returns the total amount of time (in seconds) that a
 	 * jump of the given worm would take.
+	 * 
+	 * @throws ModelException
 	 */
-	public double getJumpTime(Worm worm) {
+	public double getJumpTime(Worm worm) 
+	   throws ModelException {
+		try {
 		return worm.jumpTime();
+		}
+		catch(ArithmeticException exc) {
+			throw new ModelException("Cannot divide by zero");
+		}
 	}
 
 	/**
@@ -81,32 +114,39 @@ public class Facade implements IFacade {
 	 * after a time t.
 	 *  
 	 * @return An array with two elements,
-	 *  with the first element being the x-coordinate and
-	 *  the second element the y-coordinate
+	 *  	   with the first element being the x-coordinate and
+	 *         the second element the y-coordinate
+	 * @throws ModelException
 	 */
-	public double[] getJumpStep(Worm worm, double t) {
-		return worm.jumpStep(t);
+	public double[] getJumpStep(Worm worm, double t) 
+       throws ModelException {
+		try {
+			return worm.jumpStep(t);
+		}
+		catch (IllegalJumpException exc) {
+			throw new ModelException("This worm cannot jump.");
+		}
 	}
 	
 	/**
 	 * Returns the x-coordinate of the current location of the given worm.
 	 */
 	public double getX(Worm worm) {
-		return worm.getX();
+		return worm.getPosition().getX();
 	}
 	
 	/**
 	 * Returns the y-coordinate of the current location of the given worm.
 	 */
 	public double getY(Worm worm) {
-		return worm.getY();
+		return worm.getPosition().getY();
 	}
 	
 	/**
 	 * Returns the current orientation of the given worm (in radians).
 	 */
 	public double getOrientation(Worm worm) {
-		return worm.getOrientation();
+		return worm.getDirection();
 	}
 
 	/**
@@ -118,9 +158,17 @@ public class Facade implements IFacade {
 
 	/**
 	 * Sets the radius of the given worm to the given value.
+	 * 
+	 * @throws ModelException
 	 */
-	public void setRadius(Worm worm, double newRadius) {
-		worm.setRadius(newRadius);
+	public void setRadius(Worm worm, double newRadius) 
+	   throws ModelException {
+		try {
+			worm.setRadius(newRadius);
+		}
+		catch(IllegalRadiusException exc){
+			throw new ModelException("Not a valid radius.");
+		}
 		
 	}
 
@@ -128,7 +176,7 @@ public class Facade implements IFacade {
 	 * Returns the minimal radius of the given worm.
 	 */
 	public double getMinimalRadius(Worm worm) {
-		return worm.getMinimalRadius();
+		return Worm.minimalRadius;
 	}
 
 	/**
@@ -154,9 +202,17 @@ public class Facade implements IFacade {
 
 	/**
 	 * Renames the given worm.
+	 * 
+	 * @throws ModelException
 	 */
-	public void rename(Worm worm, String newName) {
-		worm.setName(newName);
+	public void rename(Worm worm, String newName) 
+	   throws ModelException {
+		try {
+			worm.setName(newName);;
+		}
+		catch (IllegalNameException exc) {
+			throw new ModelException("Invalid name.");
+		}		
 	}
 
 	/**
