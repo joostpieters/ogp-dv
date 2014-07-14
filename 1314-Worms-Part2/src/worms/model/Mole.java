@@ -1,5 +1,5 @@
 package worms.model;
-import java.util.*;
+import java.util.List;
 
 import worms.util.Util;
 import be.kuleuven.cs.som.annotate.*;
@@ -25,7 +25,7 @@ import worms.exceptions.*;
  *         | canHaveAsPoints(getHitPoints())           
  * @author   Delphine Vandamme 
  */
-public class Worm extends MoveableGameObject {
+public class Mole extends MoveableGameObject {
 
 	/**
 	 * Initialize this new worm with given name, location, direction and radius.
@@ -65,14 +65,12 @@ public class Worm extends MoveableGameObject {
 	 *       | ! isValidDirection(direction)               
 	 */
 	@Raw 
-	public Worm(World world, Position position, double direction, double radius,
+	public Mole(World world, Position position, double direction, double radius,
 		String name) 
 	   throws IllegalDirectionException, IllegalPositionException, IllegalRadiusException, IllegalNameException {
 		super(world, position, radius, direction);
 		setName(name);
-		setHitPoints(getMaxPoints());
 		setActionPoints(getMaxPoints());
-		setWeapons();
 	}
 	
 	/**
@@ -126,13 +124,25 @@ public class Worm extends MoveableGameObject {
 	 */
 	@Override
 	public double getMinimalRadius() {
-		return this.minimalRadius;
+		return 0.25;
 	}
 	
 	/**
-	 * Variable registering the minimal radius of the worm.
+	 * 
 	 */
-	public final double minimalRadius = 0.25;
+	@Override
+	public double getMaximalRadius() {
+		return 1.0;
+	}
+	
+	@Override
+	public void setRadius(double radius) {
+		if (radius > getMaximalRadius()) {
+			radius = getMaximalRadius();
+			terminate();
+		}
+		super.setRadius(radius);
+	}
 	
 	/**
 	 * Returns the mass of the worm.
@@ -147,7 +157,7 @@ public class Worm extends MoveableGameObject {
 	/**
 	 * Variable registering the density of a worm that applies to all worms.
 	 */
-	private final int p = 1062;
+	private final double p = 1564.5;
 	
 	/**
 	 * Returns The current number of action points of the worm.
@@ -275,90 +285,6 @@ public class Worm extends MoveableGameObject {
 	private int actionPoints;
 	
 	/**
-	 * Returns The current number of hit points of the worm.
-	 * 
-	 * @return The current number of hit points of the worm.
-	 *  	 | result == this.hitPoints
-	 * @effect If the nr of hit points is above the maximum nr
-	 *         of hit points, the nr of hit points is set 
-	 *         to the maximum nr of hit points.
-	 *       | setHitPoints(getMaxPoints())
-	 */
-	public int getHitPoints() {
-		if ( hitPoints > getMaxPoints() )
-			setHitPoints(getMaxPoints());
-		//if ( (hitPoints == minPoints) )
-			
-		return this.hitPoints;
-	}
-	
-	/**
-	 * Returns the current number of hit points of the worm.
-	 * 
-	 * @param  hitPoints
-	 *		   The new number of hit points for this worm.
-	 * @post    If the given number of hit points are in the range established by the minimum
-	 *          and maximum number of hit points for this worm, the number of hit points
-	 *          of this worm are equal to the given number of hit points.
-	 *        | if ( (hit points >= getMinPoints()) && (hitPoints <= getMaxPoints()) )
-	 *        |   then new.getHitPoints() == hitPoints
-	 * @post   If the given number of hit points exceeds the maximum number of hit points for	
-	 * 		   this worm, the number of hit points of this worm
-	 * 		   are equal to the the highest possible value for the number of hit points of this worm.
-	 *       | if (hitPoints> getMaxPoints())
-	 *       |   then new.getHitPoints() == getMaxPoints() 
-	 * @post   If the given number of hit points are below the minimum number of 
-	 * 		   hit points for this worm, the number of hit points of this worm 
-	 * 		   are equal to the lowest possible value for the number of hit points of this worm.
-	 *        | if (hitPoints < getMinPoints())
-	 *        |     then new.getHitPoints() = this.getMinPoints()     
-	 */
-	public void setHitPoints(int hitPoints) {
-		if (hitPoints > getMaxPoints())
-			this.hitPoints = getMaxPoints();
-		else if (hitPoints <= minPoints) {
-			this.hitPoints = minPoints;
-			terminate();
-		}
-		else 
-			this.hitPoints = hitPoints;
-	}
-	
-	/**
-	 * Decreases the current number of hit points of the worm with 
-	 * the given number of points.
-	 * 
-	 * @param  hitPoints
-	 * 		   The number of hit points to be subtracted from the 
-	 * 		   current number of hit points.
-	 * @effect If the given nr of hit points is positive and if 
-	 * 		   the old nr of hit points of this worm is not below 
-	 * 		   the minimum nr of hit points incremented with the given 
-	 * 		   nr of hit points, the new nr of hit points is equal to
-	 * 		   the old nr of hit points decremented with the given nr of hit points.
-	 *       | setHitPoints(getHitPoints() - hitPoints)
-	 * @effect If the given nr of hit points is positive and if 
-	 * 		   the old nr of hit points of this worm is below 
-	 * 		   the minimum nr of hit points incremented with the given 
-	 * 		   nr of hit points, the new nr of hit points is equal to
-	 * 		   the minimum hit points.
-	 *       | setActionPoints(minActionPoints)
-	 */
-	public void decreaseHitPoints(int hitPoints) {
-		if ( (hitPoints > 0) 
-		   && (getHitPoints() >= minPoints + hitPoints ) )
-			setHitPoints(getHitPoints() - hitPoints);
-		else if ( ( (hitPoints > 0) 
-		   && (getHitPoints() <= minPoints + hitPoints ) ))
-			setHitPoints(minPoints);
-	}
-	
-	/**
-	 * Variable registering the current number of hit points of the worm.
-	 */
-	private int hitPoints;
-	
-	/**
 	 * Returns the name the worm.
 	 */
 	@Basic @Raw
@@ -377,7 +303,15 @@ public class Worm extends MoveableGameObject {
 	 *       |        (name.length() >= 2) && (name.matches("[A-Z][a-zA-Z0-9\'\" ]*"))
 	 */
 	public static boolean isValidName(String name) {
-		return (name.length() >= 2) && (name.matches("[A-Z][a-zA-Z0-9\'\" ]*"));
+		String[] words = name.split(" ");    
+		if (words.length != 2)
+			return false;
+		else {
+			for (String word: words)
+				if (word.length() < 2 || !word.matches("[A-Z][a-zA-Z]*"))
+					return false;
+			return true;
+		}
 	}
 	
 	/**
@@ -403,12 +337,6 @@ public class Worm extends MoveableGameObject {
 	 * Variable registering the name of the worm.
 	 */
 	private String name;
-	
-	/**
-	 * Variable registering the Earth’s standard acceleration that applies to all worms.
-	 */
-	private static final double G = 9.80665;
-
 	
 	/**
 	 * Returns whether or not the worm can move a given number of steps.
@@ -457,14 +385,12 @@ public class Worm extends MoveableGameObject {
 			decreaseActionPoints(costMove(newPos));
 			setPosition(newPos);
 			eat();
-			//if (canFall())
-			//	fall();
 		}
 	}
 	
 	public Position getAdjacentorPassablePosition() 
 	  throws IllegalPositionException {
-		double distance = getRadius();
+		double distance = getRadius()/3;
 		double divergence = 0;
 		double step = Math.min(getWorld().getPixelWidth(), getWorld().getPixelHeight());
 		Position passablePos = null;
@@ -501,12 +427,7 @@ public class Worm extends MoveableGameObject {
 	    		4 * Math.abs(Math.sin(getDirection())))) ) 
 	 */
 	public int costMove(Position nextPosition) {
-		double slope = getPosition().getSlope(nextPosition);
-		double cost = Math.ceil((Math.abs(Math.cos(slope)) + 4 * Math.abs(Math.sin(slope))));
-		if (cost < Integer.MAX_VALUE)
-			return (int) cost;
-		else
-			return Integer.MAX_VALUE;
+		return 3;
 	}
 	
 	/**
@@ -522,23 +443,21 @@ public class Worm extends MoveableGameObject {
 	 * Makes the given worm fall down until it rests on impassable terrain again.
 	 */
 	public void fall() {
-		if (!canFall()) 
-			throw new IllegalStateException("Cannot fall!");
 		double step = getWorld().getPixelHeight();
 		double distance = step;
 		Position tempPos = getPosition().addToY(-distance);
-		int cntr = 0;
+		//int cntr = 0;
 		while ( (!getWorld().isImpassable(tempPos.getX(), tempPos.getY(), getRadius())) 
 			    && (! getWorld().isAdjacent(tempPos.getX(), tempPos.getY(), getRadius()))) {
 			distance += step;
 			tempPos = getPosition().addToY(-distance);
-			cntr += 1;
+			//cntr += 1;
 		}
 		setPosition(tempPos); 
-		decreaseHitPoints(costFall(step*cntr));
 		eat();
+		//decreaseHitPoints(costFall(step*cntr));
 		if (! getWorld().isInWorld(tempPos.getX(), tempPos.getY(), getRadius()) ) 
-			terminate();//decreaseHitPoints(getHitPoints());
+			terminate();
 	}
 	
 	/**
@@ -559,326 +478,13 @@ public class Worm extends MoveableGameObject {
 	}
 
 	/**
-	 * Returns whether or not the worm can jump.
-	 * 
-	 * @return True if and only if the number action points of 
-	 * 		   this worm is greater than the minimum number 
-	 * 		   of action points, the direction does not exceed Pi and is not less than zero.
-	 *       |  result == (getActionPoints() >= minActionPoints &&  getDirection() >= 0 
-	 *		 |		       && Util.fuzzyLessThanOrEqualTo(getDirection(), Math.PI)      
-	 */
-	public boolean canJump(double timeStep) {
-		return ( (getActionPoints() > minPoints) 
-				&& !(Util.fuzzyEquals(jumpTime(timeStep), 0))
-				&& !(getWorld().isImpassable(getPosition().getX(), getPosition().getY(), this.getRadius())) );
-	}
-	
-	/**
-	 * Changes the position of the worm as the result of a jump 
-	 * from the current position (x,y) and with respect to the 
-	 * worm’s direction and the number of remaining action points.
-	 * 
-	 * @effect If the worm can jump, the jump distance is added to the
-	 * 		   current x-coordinate of the position of this worm.
-	 *  	 | getPosition().addToX(distanceJump())
-	 * @effect The number of action points of the worm is set to the minimum value.
-	 * 		 | setActionPoints(minActionPoints)
-	 * @throws IllegalJumpException
-	 *         The worm is unable to jump.
-	 *       | ! canJump() 
-	 */
-	public void jump(double timeStep)
-	   throws IllegalJumpException {
-		if (! canJump(timeStep))
-			throw new IllegalJumpException(); 
-		Position positionAfterJump = jumpStep(jumpTime(timeStep));
-		setPosition(positionAfterJump);
-		
-		setActionPoints(minPoints);
-		eat();
-		if (! getWorld().isAdjacent(getPosition().getX(), getPosition().getY(), this.getRadius()))
-			terminate();	
-	}
-	
-	/**
-	 * Returns the above time for a potential jump from the current position.
-	 * 
-	 * @return The jump time equals the jump distance divided by the initial velocity.
-	 * 		 | result == distanceJump() / initialVelocityX()
-	 * @throws ArithmeticException
-	 *         Division by zero.
-	 *       | initialVelocityX() == 0
-	 */
-	public double jumpTime(double timeStep) {
-		double jumpTime = timeStep;
-		Position tempPos = jumpStep(jumpTime);
-		while ( !stopJump(tempPos) ) {
-			jumpTime += timeStep;
-			tempPos = jumpStep(jumpTime);
-		}
-		if (getWorld().isImpassable(tempPos.getX(),tempPos.getY(),getRadius()) && getWorld().isInWorld(tempPos.getX(),tempPos.getY(),getRadius()))
-			return 0;
-		return jumpTime;
-	}
-
-	public boolean stopJump(Position position) {
-		return getWorld().isImpassable(position.getX(),position.getY(),getRadius())
-		|| (getPosition().getDistanceTo(position) > getRadius() && getWorld().isAdjacent(position.getX(), position.getY(), getRadius()));
-	}
-	
-	/**
-	 * Returns in-flight positions of a jumping worm at any dt seconds after launch.
-	 * 
-	 * @param  dt
-	 * 
-	 * ²
-	 * 		   Number of seconds after launch.
-	 * @return If the worm can jump, an array of the in-flight positions (xdt, ydt) is returned. 
-	 * 		   The x-position equals the sum of the current x-coordinate of the position, 
-	 *         and the product of the initial velocity and time dt. 
-	 *         The y-position equals the sum of the current y-coordinate of the position, 
-	 *         and the product of the initial velocity and time dt, diminished with (0.5*G*dt^2).
-	 *       | return == { (getPosition().getX() + (initialVelocityX()*dt)), 
-	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5*G*Math.pow(dt, 2)) }
-	 * @throws IllegalJumpException
-	 *         The action cannot be performed because the worm cannot jump.
-	 *       | ! canJump()
-	 */
-	public Position jumpStep(double dt) {
-		double xdt = getPosition().getX() + (initialVelocityX()*dt);
-		double ydt = getPosition().getY() + (initialVelocityY()*dt) - 0.5*G*Math.pow(dt, 2);
-		return new Position(xdt,ydt);
-	}
-	
-	/**
-	 * Returns the force exerted on the worm.
-	 * 
-	 * @return The force equals the sum of five times 
-	 * 		   the action points of this worm and the product 
-	 *         of the mass of the worm and G.
-	 *       | return == (5*getActionPoints() + getMass()*G)
-	 */
-	public double getForce() {
-		return 5*getActionPoints() + getMass()*G;
-	}
-	
-	/**
-	 * Returns the initial velocity of the worm. 
-	 * 
-	 * @return The initial velocity equals 0.5 times the force 
-	 *         on the worm divided by the mass of the worm.
-	 *       | result == ( force() * 0.5 / getMass() )
-	 * @throws ArithmeticException
-	 *         Division by zero.
-	 *       | getMass() == 0
-	 */
-	public double initialVelocity()
-	   throws ArithmeticException {
-		if (getMass() == 0)
-			throw new ArithmeticException();
-		return getForce() * 0.5 / getMass();
-	}
-	
-	/**
-	 * Returns the x-component of the initial velocity of the worm
-	 * 
-	 * @return The x-component of the initial velocity equals the 
-	 * 	       product of the initial velocity of the worm and the 
-	 *         cosine of the direction of the worm.
-	 *  	 | result == ( initialVelocity() * Math.cos(getDirection()) )
-	 */
-	public double initialVelocityX() {
-		return initialVelocity() * Math.cos(getDirection());
-	}
-	
-	/**
-	 * Returns the y-component of the initial velocity of the worm
-	 * 
-	 * @return The y-component of the initial velocity equals the 
-	 * 	       product of the initial velocity of the worm and the 
-	 *         sine of the direction of the worm.
-	 *       | result == ( initialVelocity() * Math.sin(getDirection()) )
-	 */
-	public double initialVelocityY() {
-		return initialVelocity() * Math.sin(getDirection());
-	}
-
-	/**
-	 * Check whether this worm has the given weapon as one
-	 * of the weapons attached to it.
-	 * 
-	 * @param weapon
-	 * 		  The weapon to check.
-	 */
-	@Basic @Raw
-	public boolean hasAsWeapon(Weapon weapon) {
-		return this.weapons.contains(weapon);
-	}
-	
-	/**
-	 * Check whether this worm can have the given weapon as one of its weapons.
-	 * 
-	 * @param  weapon
-	 *         The weapon to check.
-	 * @return False if the given weapon is not effective.
-	 *       | if (weapon == null) then result == false
-	 *         Otherwise, true if and only if this worm is not yet terminated or if the given weapon is terminated.
-	 *       | else result = ( (this.isAlive() || weapon.isTerminated() )     
-	 */
-	@Raw
-	public boolean canHaveAsWeapon(Weapon weapon) {
-		return ( (weapon != null) &&  (this.isAlive() || weapon.isTerminated()) );
-	} 
-	
-	/**
-	 * Check whether this worm has proper weapons associated with it.
-	 * @return True if and only if this worm can have each of its weapons as a weapon attached to it, 
-	 * 		   and if each of these weapons references this worm as their worm.
-	 *       | result == for each weapon in Weapon : 
-	 *       |             ( if (this.hasAsWeapon(weapon)) then 
-	 *                           canHaveAsWeapon(weapon) && (weapon.getWorm() == this) )
-	 */
-	@Raw
-	public boolean hasProperWeapons() {
-		for (Weapon weapon: this.weapons) {
-			if (! canHaveAsWeapon(weapon))
-				return false;
-			if (weapon.getWorm() != this)
-				return false;
-		}
-		return true;
-	}
-	
-	/**
-	 * Return a list of all weapons associated with this worm.
-	 * 
-	 * @return Each weapon in the resulting is is attached to this worm and vice versa.
-	 *       | for each weapon in Weapon:
-	 *       |    (result.contains(weapon) == this.hasAsWeapon(weapon))
-	 */
-	public List<Weapon> getAllWeapons() {
-		return new ArrayList<Weapon>(this.weapons);
-	}
-	
-	/**
-	 * Add the given weapon as a weapon for this worm.
-	 * @param  weapon
-	 *         The weapon to become a weapon of this worm.
-	 * @post   This worm has the given weapon as one of its weapons.
-	 *       | new.hasAsWeapon(weapon)
-	 * @post   The given weapon references this worm as the worm to which it is attached.
-	 *       | (new weapon).getWorm() == this
-	 * @throws IllegalArgumentException
-	 *         This worm cannot have the given weapon as one of its weapons.
-	 *       | ! canHaveAsWeapon(weapon)
-	 * @throws IllegalArgumentException
-	 * 		   The given weapon is already attached to some worm.
-	 *       | ( (weapon != null) && (weapon.getWorm() != null) )      
-	 */
-	public void addAsWeapon(Weapon weapon) 
-	  throws IllegalArgumentException {
-		if (!canHaveAsWeapon(weapon))
-			throw new IllegalArgumentException();
-		if (weapon.getWorm() != null)
-			throw new IllegalArgumentException();
-		this.weapons.add(weapon);
-		weapon.setWorm(this);		
-	}
-	
-	/**
-	 * Remove the given weapon as a weapon associated with this worm.
-	 * @param  weapon
-	 *         The weapon to be removed.
-	 * @post   This worm does not have the given weapon as one of its weapons.
-	 *       | ! new.hasAsWeapon(weapon) 
-	 * @post   If this worm has the given weapon as one of its weapons, the given weapon 
-	 *         is no longer attached to any worm.
-	 *       | if (hasAsWeapon(weapon))
-	 *       |    ((new weapon).getWorm() == null)
-	 */
-	public void removeAsWeapon(Weapon weapon) {
-		if (hasAsWeapon(weapon)) {
-			this.weapons.remove(weapon);
-			weapon.setWorm(null);
-		}
-	}
-	
-	/**
-	 * 
-	 */
-	@SuppressWarnings("unused")
-	public void setWeapons() {
-		Weapon bazooka = new Bazooka(this);
-		Weapon rifle = new Rifle(this);
-		this.selectedWeapon = bazooka;
-	}
-	
-	/**
-	 * Returns the name of the weapon that is currently active for the given worm,
-	 * or null if no weapon is active.
-	 */
-	public Weapon selectedWeapon() {
-		return this.selectedWeapon;
-	}
-	
-	/**
-	 * Activates the next weapon for the given worm
-	 */
-	public void selectNextWeapon() 
-	 throws IllegalStateException {
-		if (this.weapons.size() == 0) {
-			throw new IllegalStateException("This worm has no weapons!");
-		}
-		int index = this.weapons.indexOf(this.selectedWeapon) + 1;
-		if (index == this.weapons.size()) 
-			index = 0;
-		this.selectedWeapon = this.weapons.get(index);
-	}
-
-	private Weapon selectedWeapon;
-	
-	/**
-	 * Makes the given worm shoot its active weapon with the given propulsion yield.
-	 */
-	public void shoot(int yield) 
-	  throws IllegalShootException {
-		selectedWeapon().shoot(yield);
-		decreaseActionPoints(selectedWeapon().costOfShooting());
-	}
-	
-	/**
-	 * Returns the name of the weapon that is currently active for the given worm,
-	 * or null if no weapon is active.
-	 */
-	public String getSelectedWeapon() {
-		return selectedWeapon().getName();		
-	}	
-	
-	/**
-	 * List collecting references to the weapons of this worm.
-	 * 
-	 * @invar The list of weapons is effective.
-	 *      | weapons != null
-	 * @invar Each element in the list of weapons is either not effective or it 
-	 *        references a weapon that is acceptable as a weapon for this worm.
-	 *      | for each weapon in weapons:
-	 *           ( (weapon == null) || canHaveAsWeapon(weapon) )
-	 */
-	private final List<Weapon> weapons = new ArrayList<Weapon>();
-	
-	/**
 	 * 
 	 * @param 
 	 */
 	@Override
 	public void terminate() {
-		if (getWorld().getCurrentWorm() == this)
+	//	if (getWorld().getCurrentPlayer() == this)
 			getWorld().startNextTurn();
-		for (Weapon weapon: weapons) 
-			if (! weapon.isTerminated()) {
-				weapon.setWorm(null);
-				this.weapons.remove(weapon);
-		}
 		super.terminate();
 	}
 	
@@ -890,9 +496,13 @@ public class Worm extends MoveableGameObject {
 	public void setToActive(boolean isActive) {
 		if (isActive) {
 			setActionPoints(getMaxPoints());
-			setHitPoints(getHitPoints()+10);
 		}
 		super.setToActive(isActive);
+	}
+
+	@Override
+	public double getForce() {
+		return 0;
 	}
 
 	/**	
@@ -913,12 +523,11 @@ public class Worm extends MoveableGameObject {
 	}
 	
 	public double getEffectOfEating(GameObject object) {
-		Food ration = (Food) object;
-		return (getRadius() * (1 + ration.getGrowthEffect()));
+		return ( getRadius() * (1 + (object.getRadius()/getRadius())) );
 	}
 	
 	public boolean canEat(GameObject object) {
-		return ( Food.class.isInstance(object) );
+		return ( Worm.class.isInstance(object) && Util.fuzzyLessThanOrEqualTo(object.getRadius(), getRadius()));
 	}
-
+	
 }

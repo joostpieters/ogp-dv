@@ -1,6 +1,6 @@
 package worms.model;
 import worms.exceptions.*;
-import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.Random;
 
@@ -33,7 +33,8 @@ public class Facade implements IFacade {
 			String name)
 	   throws ModelException {
 		try {
-			worm = new Worm(world, x, y, direction, radius, name);
+			Worm worm = new Worm(world, new Position(x,y), direction, radius, name);
+			return worm;
 		}
 		catch(IllegalPositionException exc) {
 			throw new ModelException("Not a valid position!");
@@ -47,22 +48,13 @@ public class Facade implements IFacade {
 		catch(IllegalNameException exc) {
 			throw new ModelException("Not a valid name!");
 		}
-		return worm;
 	}
 	
 	/**
-	 * Returns whether or not the given worm can move a given number of steps.
+	 * Returns whether the given worm is alive
 	 */
-	public boolean canMove(Worm worm, int nbSteps) {
-		return worm.canMove(nbSteps);
-	}
-
-	/**
-	 * Moves the given worm by the given number of steps.
-	 */
-	public void move(Worm worm, int nbSteps) {
-		worm.move(nbSteps);	
-		
+	public boolean isAlive(Worm worm) {
+		return worm.isAlive();
 	}
 
 	/**
@@ -76,57 +68,7 @@ public class Facade implements IFacade {
 	 * Turns the given worm by the given angle.
 	 */
 	public void turn(Worm worm, double angle) {
-		worm.turn(angle);		
-	}
-
-	/**
-	 * Makes the given worm jump.
-	 * 
-	 * @throws ModelException
-	 */
-	public void jump(Worm worm) 
-	   throws ModelException {
-		try {
-			worm.jump();
-		}
-		catch (IllegalJumpException exc) {
-			throw new ModelException("This worm cannot jump.");
-		}
-	}
-
-	/**
-	 * Returns the total amount of time (in seconds) that a
-	 * jump of the given worm would take.
-	 * 
-	 * @throws ModelException
-	 */
-	public double getJumpTime(Worm worm) 
-	   throws ModelException {
-		try {
-		return worm.jumpTime();
-		}
-		catch(ArithmeticException exc) {
-			throw new ModelException("Cannot divide by zero");
-		}
-	}
-
-	/**
-	 * Returns the location on the jump trajectory of the given worm
-	 * after a time t.
-	 *  
-	 * @return An array with two elements,
-	 *  	   with the first element being the x-coordinate and
-	 *         the second element the y-coordinate
-	 * @throws ModelException
-	 */
-	public double[] getJumpStep(Worm worm, double t) 
-       throws ModelException {
-		try {
-			return worm.jumpStep(t);
-		}
-		catch (IllegalJumpException exc) {
-			throw new ModelException("This worm cannot jump.");
-		}
+		worm.turn(angle);	
 	}
 	
 	/**
@@ -177,7 +119,7 @@ public class Facade implements IFacade {
 	 * Returns the minimal radius of the given worm.
 	 */
 	public double getMinimalRadius(Worm worm) {
-		return Worm.minimalRadius;
+		return worm.getMinimalRadius();
 	}
 
 	/**
@@ -191,7 +133,21 @@ public class Facade implements IFacade {
 	 * Returns the maximum number of action points of the given worm.
 	 */
 	public int getMaxActionPoints(Worm worm) {
-		return worm.getMaxActionPoints();
+		return worm.getMaxPoints();
+	}
+
+	/**
+	 * Returns the current number of hit points of the given worm.
+	 */
+	public int getHitPoints(Worm worm) {
+		return worm.getHitPoints();
+	}
+
+	/**
+	 * Returns the maximum number of hit points of the given worm.
+	 */
+	public int getMaxHitPoints(Worm worm) {
+		return worm.getMaxPoints();
 	}
 
 	/**
@@ -222,38 +178,118 @@ public class Facade implements IFacade {
 	public double getMass(Worm worm) {
 		return worm.getMass();
 	}
-
+	
 	/**
 	 * Returns whether or not the given worm can fall down
 	 */
 	public boolean canFall(Worm worm) {
-		// TODO Auto-generated method stub
-		return false;
+		return worm.canFall();
+	}
+	
+	/**
+	 * Makes the given worm fall down until it rests on impassable terrain again.
+	 */
+	public void fall(Worm worm) {
+		worm.fall();
+		
 	}
 
 	/**
 	 * Returns whether or not the given worm is allowed to move.
 	 */
 	public boolean canMove(Worm worm) {
-		// TODO Auto-generated method stub
-		return false;
+		return worm.canMove();
 	}
 
 	/**
-	 * Makes the given worm fall down until it rests on impassable terrain again.
+	 * Moves the given worm according to the rules in the assignment.
 	 */
-	public void fall(Worm worm) {
-		// TODO Auto-generated method stub
+	public void move(Worm worm) {
+		worm.move();		
+	}
+	
+	/**
+	 * Returns the location on the jump trajectory of the given worm
+	 * after a time t.
+	 *  
+	 * @return An array with two elements,
+	 *  	   with the first element being the x-coordinate and
+	 *         the second element the y-coordinate
+	 * @throws ModelException
+	 */
+	public double[] getJumpStep(Worm worm, double t) {
+		double x = worm.jumpStep(t).getX();
+		double y = worm.jumpStep(t).getY();
+		double[] jumpStep = {x, y};
+		return jumpStep;
+		
+	}
+	
+	/**
+	 * Determine the time that the given worm can jump until it hits the terrain or leaves the world.
+	 * The time should be determined using the given elementary time interval.
+	 * 
+	 * @param worm The worm for which to calculate the jump time.
+	 * 
+	 * @param timeStep An elementary time interval during which you may assume
+	 *                 that the worm will not completely move through a piece of impassable terrain.
+	 *                 
+	 * @return The time duration of the worm's jump.
+	 */
+	public double getJumpTime(Worm worm, double timeStep) 
+		throws ModelException {
+		  return worm.jumpTime(timeStep);
 		
 	}
 
 	/**
-	 * Returns the current number of hit points of the given worm.
+	 * Make the given worm jump to its new location.
+	 * The new location should be determined using the given elementary time interval. 
+	 *  
+	 * @param worm The worm that needs to jump
+	 * 
+	 * @param timeStep An elementary time interval during which you may assume
+	 *                 that the worm will not completely move through a piece of impassable terrain.
 	 */
-	public int getHitPoints(Worm worm) {
-		// TODO Auto-generated method stub
-		return 0;
+	public void jump(Worm worm, double timeStep) 
+		 throws ModelException {
+				try {
+					worm.jump(timeStep);
+				}
+				catch (IllegalJumpException exc) {
+					throw new ModelException("This worm cannot jump.");
+				}
 	}
+
+	/**
+	 * Activates the next weapon for the given worm
+	 */
+	public void selectNextWeapon(Worm worm) {
+		worm.selectNextWeapon();
+	}
+
+	/**
+	 * Makes the given worm shoot its active weapon with the given propulsion yield.
+	 */
+	public void shoot(Worm worm, int yield) 
+	  throws ModelException {
+		try {
+			worm.shoot(yield);
+		}
+		catch (IllegalShootException exc) {
+			throw new ModelException("Cannot shoot.");
+		}
+	}
+	
+	/**
+	 * Returns the name of the weapon that is currently active for the given worm,
+	 * or null if no weapon is active.
+	 */
+	public String getSelectedWeapon(Worm worm) {
+		return worm.getSelectedWeapon();
+	}
+	
+	
 
 	/**
 	 * Returns the location on the jump trajectory of the given projectile after a
@@ -263,8 +299,10 @@ public class Facade implements IFacade {
 	 *         x-coordinate and the second element the y-coordinate
 	 */
 	public double[] getJumpStep(Projectile projectile, double t) {
-		// TODO Auto-generated method stub
-		return null;
+		double x = projectile.jumpStep(t).getX();
+		double y = projectile.jumpStep(t).getY();
+		double[] jumpStep = {x, y};
+		return jumpStep;
 	}
 
 	/**
@@ -279,81 +317,7 @@ public class Facade implements IFacade {
 	 * @return The time duration of the projectile's jump.
 	 */
 	public double getJumpTime(Projectile projectile, double timeStep) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * Determine the time that the given worm can jump until it hits the terrain or leaves the world.
-	 * The time should be determined using the given elementary time interval.
-	 * 
-	 * @param worm The worm for which to calculate the jump time.
-	 * 
-	 * @param timeStep An elementary time interval during which you may assume
-	 *                 that the worm will not completely move through a piece of impassable terrain.
-	 *                 
-	 * @return The time duration of the worm's jump.
-	 */
-	public double getJumpTime(Worm worm, double timeStep) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * Returns the maximum number of hit points of the given worm.
-	 */
-	public int getMaxHitPoints(Worm worm) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * Returns the radius of the given projectile.
-	 */
-	public double getRadius(Projectile projectile) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * Returns the name of the weapon that is currently active for the given worm,
-	 * or null if no weapon is active.
-	 */
-	public String getSelectedWeapon(Worm worm) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	/**
-	 * Returns the x-coordinate of the given projectile.
-	 */
-	public double getX(Projectile projectile) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * Returns the y-coordinate of the given projectile.
-	 */
-	public double getY(Projectile projectile) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	/**
-	 * Returns whether the given projectile is still alive (active).
-	 */
-	public boolean isActive(Projectile projectile) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	/**
-	 * Returns whether the given worm is alive
-	 */
-	public boolean isAlive(Worm worm) {
-		// TODO Auto-generated method stub
-		return true;
+		return projectile.jumpTime(timeStep);
 	}
 
 	/**
@@ -365,67 +329,55 @@ public class Facade implements IFacade {
 	 * @param timeStep An elementary time interval during which you may assume
 	 *                 that the projectile will not completely move through a piece of impassable terrain.
 	 */
-	public void jump(Projectile projectile, double timeStep) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/**
-	 * Make the given worm jump to its new location.
-	 * The new location should be determined using the given elementary time interval. 
-	 *  
-	 * @param worm The worm that needs to jump
-	 * 
-	 * @param timeStep An elementary time interval during which you may assume
-	 *                 that the worm will not completely move through a piece of impassable terrain.
-	 */
-	public void jump(Worm worm, double timeStep) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/**
-	 * Moves the given worm according to the rules in the assignment.
-	 */
-	public void move(Worm worm) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/**
-	 * Activates the next weapon for the given worm
-	 */
-	public void selectNextWeapon(Worm worm) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/**
-	 * Makes the given worm shoot its active weapon with the given propulsion yield.
-	 */
-	public void shoot(Worm worm, int yield) {
-		// TODO Auto-generated method stub
-		
+	public void jump(Projectile projectile, double timeStep)  
+	   throws ModelException {
+		try {
+			projectile.jump(timeStep);
+		}
+		catch (IllegalJumpException exc) {
+			throw new ModelException("This projectile cannot jump.");
+		}		
 	}
 	
 	/**
-	 * Variable registering the worm.
+	 * Returns the radius of the given projectile.
 	 */
-	private Worm worm;
-	
+	public double getRadius(Projectile projectile) {
+		return projectile.getRadius();
+	}
+
+	/**
+	 * Returns the x-coordinate of the given projectile.
+	 */
+	public double getX(Projectile projectile) {
+		return projectile.getPosition().getX();
+	}
+
+	/**
+	 * Returns the y-coordinate of the given projectile.
+	 */
+	public double getY(Projectile projectile) {
+		return projectile.getPosition().getY();
+	}
+
+	/**
+	 * Returns whether the given projectile is still alive (active).
+	 */
+	public boolean isActive(Projectile projectile) {
+		return projectile.isAlive();
+	}
+
 	public World createWorld(double width, double height, boolean[][] passableMap, Random random) 
 	   throws ModelException {
-		//try {
-			world = new World(width, height, passableMap, random);
-		//}
-		
-		return world;
-	}
+		try {
+			World world = new World(width, height, passableMap, random);
+			return world;
+		}
+		catch(IllegalDimensionException exc) {
+			throw new ModelException("Not a valid dimension for this world!");
+		}
 	
-	/**
-	 * Variable registering the world.
-	 */
-	private World world;
+	}
 
 	/**
 	 * Create and add a new worm to the given world.
@@ -434,8 +386,10 @@ public class Facade implements IFacade {
 	 * The new worm may (but isn't required to) have joined a team.
 	 */
 	public void addNewWorm(World world) {
-		createWorm(world,0,11,0,2,"Delphine");
-		world.addNewWorm();
+		double radiusWorm = 0.6;
+		Position pos = world.generateRandomAdjacentPosition(radiusWorm);
+		if (pos != null)
+			createWorm(world, pos.getX(), pos.getY(), Math.PI/3, radiusWorm, "Delphine");
 	}
 
 	/**
@@ -466,7 +420,8 @@ public class Facade implements IFacade {
 	 * Returns all the worms in the given world
 	 */
 	public Collection<Worm> getWorms(World world) {
-		return world.getWorms();
+		//return world.getWorms();
+		return  world.getGameObjectsOfType(Worm.class);
 	}
 	
 	/**
@@ -511,9 +466,14 @@ public class Facade implements IFacade {
 	/**
 	 * Starts a game in the given world.
 	 */
-	public void startGame(World world) {
-		world.startGame();
-		
+	public void startGame(World world) 
+	  throws ModelException {
+		try {
+			world.startGame();
+		}
+		catch(IllegalStartException exc) {
+			throw new ModelException("You must add at least two worms to start this game!");
+		}
 	}
 
 	/**
@@ -530,8 +490,7 @@ public class Facade implements IFacade {
 	 * (For single-student groups that do not implement food, this method must always return an empty collection)
 	 */
 	public Collection<Food> getFood(World world) {
-		Collection<Food> food = new ArrayList<Food>();
-		return food;
+		return world.getGameObjectsOfType(Food.class);
 	}
 	
 	/**
@@ -547,21 +506,8 @@ public class Facade implements IFacade {
 	 * (For single-student groups that do not implement food, this method should have no effect)
 	 */
 	public Food createFood(World world, double x, double y) {
-		food = new Food();
+		Food food = new Food(world, new Position(x,y));
 		return food;
-	}
-	
-	/**
-	 * Variable registering the food.
-	 */
-	private Food food;
-	
-	/**
-	 * Create and add an empty team with the given name to the given world.
-	 * 
-	 * (For single-student groups that do not implement teams, this method should have no effect)
-	 */
-	public void addEmptyTeam(World world, String newName) {		
 	}
 
 	/**
@@ -571,6 +517,9 @@ public class Facade implements IFacade {
 	 * (For single-student groups that do not implement food, this method should have no effect)
 	 */
 	public void addNewFood(World world) {
+		Position position = world.generateRandomPosition(0.2);
+		if (position != null)
+			createFood(world, position.getX(), position.getY());
 	}
 	
 	/**
@@ -579,9 +528,35 @@ public class Facade implements IFacade {
 	 * (For single-student groups that do not implement food, this method may return any value)
 	 */
 	public double getRadius(Food food) {
-		return 0;
+		return food.getRadius();
+	}
+
+	/**
+	 * Returns the x-coordinate of the given food ration
+	 * 
+	 * (For single-student groups that do not implement food, this method may return any value)
+	 */
+	public double getX(Food food) {
+		return food.getPosition().getX();
 	}
 	
+	/**
+	 * Returns the y-coordinate of the given food ration
+	 * 
+	 * (For single-student groups that do not implement food, this method may return any value)
+	 */
+	public double getY(Food food) {
+		return food.getPosition().getY();
+	}
+	
+	/**
+	 * Returns whether or not the given food ration is alive (active), i.e., not eaten.
+	 * 
+	 * (For single-student groups that do not implement food, this method should always return false)
+	 */
+	public boolean isActive(Food food) {
+		return food.isAlive();
+	}
 
 	/**
 	 * Returns the name of the team of the given worm, or returns null if this
@@ -592,33 +567,13 @@ public class Facade implements IFacade {
 	public String getTeamName(Worm worm) {
 		return null;
 	}
-
-	/**
-	 * Returns the x-coordinate of the given food ration
-	 * 
-	 * (For single-student groups that do not implement food, this method may return any value)
-	 */
-	public double getX(Food food) {
-		return 0;
-	}
 	
 	/**
-	 * Returns the y-coordinate of the given food ration
+	 * Create and add an empty team with the given name to the given world.
 	 * 
-	 * (For single-student groups that do not implement food, this method may return any value)
+	 * (For single-student groups that do not implement teams, this method should have no effect)
 	 */
-	public double getY(Food food) {
-		return 0;
+	public void addEmptyTeam(World world, String newName) {		
 	}
-	
-	/**
-	 * Returns whether or not the given food ration is alive (active), i.e., not eaten.
-	 * 
-	 * (For single-student groups that do not implement food, this method should always return false)
-	 */
-	public boolean isActive(Food food) {
-		return false;
-	}
-
 
 }

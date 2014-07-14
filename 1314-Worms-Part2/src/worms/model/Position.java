@@ -35,7 +35,7 @@ public class Position {
      */
 	@Raw
 	public Position(double x, double y)
-	   throws IllegalPositionException{
+	   throws IllegalPositionException {
 		if ( (!isValidPosition(x)) || (!isValidPosition(y)) )
 			throw new IllegalPositionException(this);
 		this.x = x;
@@ -120,32 +120,43 @@ public class Position {
 	}
 	
 	/**
-	* Check whether this position is equal to the given object.
-	*
-	* @return 	True if and only if the given object is
-	* 			effective, if this position and the given object belong 
-	* 		    to the same class, and if this position and the other 
-	* 			object interpreted as a position have equal coordinates.
-	* 			| result ==
-	* 			| ( (other != null)
-	* 			| && (this.getClass() == other.getClass())
-	* 			| && (this.getX() == 
-	* 					 ((Position other).getX()))
-	* 			| && (this.getY() == 
-	* 					 ((Position other).getY()))
-	*/
-	@Override
-	public boolean equals(Object other) {
-		if (other == null) {
-			return false;
-		}
-		if (this.getClass() != other.getClass()) {
-			return false;
-		}
-		Position otherPosition = (Position) other;
-		return 
-			( this.getX() == otherPosition.getX() )
-	     && ( this.getY() == otherPosition.getY() );
+	 * Rotate this position by a given divergence,
+	 * about a position at a given distance and angle from this position.
+	 * 
+	 * @param divergence
+	 * @param distance
+	 * @param angle
+	 * @return
+	 */
+	public Position rotateBy(double divergence, double distance, double angle) {
+		double x = getX()+ distance*Math.cos(angle+divergence);
+		double y = getY() + distance*Math.sin(angle+divergence);
+		if (! isValidPosition(x) || ! isValidPosition(y))
+			throw new IllegalPositionException(this);
+		return new Position(x, y);
 	}
 
+	/**
+	 * 
+	 * @param position
+	 * @return
+	 */
+	public double getSlope(Position position) {
+		double dx = position.getX() - this.getX();
+		double dy = position.getY() - this.getY();
+		return Math.atan(dy/dx);
+	}
+
+	/**
+	 * Return the distance between this position and the given position pos.
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	public double getDistanceTo(Position pos) {
+		return (Math.sqrt( Math.pow((getX() - pos.getX()), 2) + Math.pow((getY() - pos.getY()), 2)));
+		
+	}
+	
+	
 }
