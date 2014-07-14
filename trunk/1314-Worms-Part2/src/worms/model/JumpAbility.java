@@ -1,63 +1,45 @@
 package worms.model;
-import java.util.List;
-import worms.exceptions.*;
 
-public abstract class Projectile extends MoveableGameObject {
+import be.kuleuven.cs.som.annotate.Basic;
+import be.kuleuven.cs.som.annotate.Immutable;
+import be.kuleuven.cs.som.annotate.Raw;
+import worms.exceptions.IllegalJumpException;
+import worms.util.Util;
 
-	public Projectile(Worm worm, int yield)  
-	  throws IllegalDirectionException, IllegalPositionException, IllegalRadiusException, IllegalWeaponException {
-		super(worm.getWorld(), new Position(0,0), 0, worm.getDirection());
-		if (!Projectile.isValidYield(yield)) {
-			throw new IllegalArgumentException("The given yield is not valid.");
-		}
+public class JumpAbility {
 
-		setForce(yield);
-		double x = worm.getPosition().getX() + (worm.getRadius() + this.getRadius())*Math.cos(worm.getDirection());
-		double y = worm.getPosition().getY() + (worm.getRadius() + this.getRadius())*Math.sin(worm.getDirection());
-		setPosition(new Position(x,y));
-		setToActive(true);
+	public JumpAbility(MoveableGameObject object) 
+	  throws IllegalArgumentException {
+		if ( ! isValidMoveableGameObject(object) )
+			throw new IllegalArgumentException("Not a valid moveable gameObject");
+		this.object = object;
 	}
 	
 	/**
-	 * Checks whether the given yield is a valid yield.
+	 * Returns the movable game object.
+	 */
+	@Basic @Raw @Immutable
+	public MoveableGameObject getGameObject() {
+		return this.object;
+	}
+	
+	/**
+	 * Check whether the given game object is a valid game object.
 	 * 
-	 * @param  yield
-	 *         The yield to check.
-	 * @return True if and only if the yield is between 0 and 100.
-	 *       | result == yield > 0 && yield < 100
+	 * @param  object
+	 *         The game object to check.
+	 * @return result == (object != null)
 	 */
-	public static boolean isValidYield(int yield) {
-		return (yield >= 0) && (yield <= 100);
-	}
-
-	
-	/**
-	 * Computes the radius of this projectile as a function of its mass.
-	 * @return radius
-	 */
-	@Override
-	public double getRadius() {
-		return Math.cbrt((getMass() * 3.0) / (p * 4.0 * Math.PI));
+	public static boolean isValidMoveableGameObject(MoveableGameObject object) {
+		return  (object != null) ;
 	}
 	
 	/**
-	 * Variable registering the density of a projectile that applies to all projectiles.
+	 * Variable referencing the game object who has this jumping ability.
 	 */
-	private final int p = 7800;
+	private final MoveableGameObject object;
 	
-
-	public abstract double getMass();
 	
-	public double getForce() {
-		return this.force;
-	}
-	
-	public abstract void setForce(int yield);
-	
-	protected double force;
-	
-	public abstract int costInHitPoints();
-    
 	/**
 	 * Returns whether or not the worm can jump.
 	 * 
@@ -68,8 +50,7 @@ public abstract class Projectile extends MoveableGameObject {
 	 *		 |		       && Util.fuzzyLessThanOrEqualTo(getDirection(), Math.PI)      
 	 */
 	public boolean canJump(double timeStep) {
-		//return !(Util.fuzzyEquals(jumpTime(timeStep), 0) );
-		return true;
+		return  !(Util.fuzzyEquals(jumpTime(timeStep), 0));
 	}
 	
 	/**
@@ -88,17 +69,10 @@ public abstract class Projectile extends MoveableGameObject {
 	 */
 	public void jump(double timeStep)
 	   throws IllegalJumpException {
-		if (! canJump(timeStep)) {
-			this.terminate();
-		    throw new IllegalJumpException();
-		}
-		Position positionAfterJump = jumpStep(jumpTime(timeStep));
-		setPosition(positionAfterJump);
-		
-		List<Worm> hitWorms = getWorld().getOverlappingObjectsOfType(Worm.class,positionAfterJump, getRadius());
-		for(Worm worm : hitWorms)
-			worm.decreaseHitPoints(costInHitPoints());
-		this.terminate();
+		if (! canJump(timeStep))
+			throw new IllegalJumpException();
+		Position positionAfterJump = new Position(jumpStep(jumpTime(timeStep))[0], jumpStep(jumpTime(timeStep))[1]);
+		//setPosition(positionAfterJump);
 	}
 	
 	/**
@@ -112,30 +86,13 @@ public abstract class Projectile extends MoveableGameObject {
 	 */
 	public double jumpTime(double timeStep) {
 		double jumpTime = timeStep;
-		Position tempPos = jumpStep(jumpTime);
-		while (!stopJump(tempPos) ) {
-			jumpTime += timeStep;
-			tempPos = jumpStep(jumpTime);
-		}
+
 		return jumpTime;
 	}
-	
-	public boolean stopJump(Position position) {
-		return ( getWorld().isImpassable(position.getX(), position.getY(), getRadius())
-		         || getWorld().overlapWithObjectOfType(Worm.class, position, getRadius())
-		         || (getPosition().getDistanceTo(position) > getRadius()
-                      && getWorld().isAdjacent(position.getX(), position.getY(), getRadius())) );
-	}
-
-
-	/**
-	 * Variable registering the Earth’s standard acceleration that applies to all worms.
-	 */
-	private static final double G = 9.80665;
 
 	
 	/**
-	 * Returns in-flight positions of a jumping worm at any dt seconds after launch.w
+	 * Returns in-flight positions of a jumping worm at any dt seconds after launch.
 	 * 
 	 * @param  dt
 	 * 
@@ -152,10 +109,11 @@ public abstract class Projectile extends MoveableGameObject {
 	 *         The action cannot be performed because the worm cannot jump.
 	 *       | ! canJump()
 	 */
-	public Position jumpStep(double dt) {	
-		double xdt = getPosition().getX() + (initialVelocityX()*dt);
-		double ydt = getPosition().getY() + (initialVelocityY()*dt) - 0.5*G*Math.pow(dt, 2);
-		return new Position(xdt,ydt);
+	public double[] jumpStep(double dt) {	
+		double xdt = getGameObject().getPosition().getX() + (initialVelocityX()*dt);
+		double ydt = getGameObject().getPosition().getY() + (initialVelocityY()*dt) - 0.5*G*Math.pow(dt, 2);
+		double[] dPosition = {xdt, ydt};
+		return dPosition;
 	}
 	
 	/**
@@ -170,9 +128,9 @@ public abstract class Projectile extends MoveableGameObject {
 	 */
 	public double initialVelocity()
 	   throws ArithmeticException {
-		if (getMass() == 0)
+		if (getGameObject().getMass() == 0)
 			throw new ArithmeticException();
-		return getForce() * 0.5 / getMass();
+		return getGameObject().getForce() * 0.5 / getGameObject().getMass();
 	}
 	
 	/**
@@ -184,7 +142,7 @@ public abstract class Projectile extends MoveableGameObject {
 	 *  	 | result == ( initialVelocity() * Math.cos(getDirection()) )
 	 */
 	public double initialVelocityX() {
-		return initialVelocity() * Math.cos(getDirection());
+		return initialVelocity() * Math.cos(getGameObject().getDirection());
 	}
 	
 	/**
@@ -196,6 +154,13 @@ public abstract class Projectile extends MoveableGameObject {
 	 *       | result == ( initialVelocity() * Math.sin(getDirection()) )
 	 */
 	public double initialVelocityY() {
-		return initialVelocity() * Math.sin(getDirection());
+		return initialVelocity() * Math.sin(getGameObject().getDirection());
 	}
+	
+	
+	/**
+	 * Variable registering the Earth’s standard acceleration that applies to all worms.
+	 */
+	private static final double G = 9.80665;
+
 }
