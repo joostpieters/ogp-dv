@@ -1,9 +1,24 @@
 package worms.model;
 import java.util.List;
 import worms.exceptions.*;
+import worms.model.abilities.JumpAbility;
 
-public abstract class Projectile extends MoveableGameObject {
+/**
+ * 
+ * @author Delphine
+ *
+ */
+public abstract class Projectile extends MoveableGameObject implements JumpAbility {
 
+	/**
+	 * 
+	 * @param worm
+	 * @param yield
+	 * @throws IllegalDirectionException
+	 * @throws IllegalPositionException
+	 * @throws IllegalRadiusException
+	 * @throws IllegalWeaponException
+	 */
 	public Projectile(Worm worm, int yield)  
 	  throws IllegalDirectionException, IllegalPositionException, IllegalRadiusException, IllegalWeaponException {
 		super(worm.getWorld(), new Position(0,0), 0, worm.getDirection());
@@ -37,16 +52,18 @@ public abstract class Projectile extends MoveableGameObject {
 	 */
 	@Override
 	public double getRadius() {
-		return Math.cbrt((getMass() * 3.0) / (p * 4.0 * Math.PI));
+		return Math.cbrt((getMass() * 3.0) / (Projectile.DENSITY * 4.0 * Math.PI));
 	}
 	
 	/**
 	 * Variable registering the density of a projectile that applies to all projectiles.
 	 */
-	private final int p = 7800;
+	private static final double DENSITY = 7800;
 	
-
-	public abstract double getMass();
+	@Override
+	public double getDensity() {
+		return Projectile.DENSITY;
+	}
 	
 	public double getForce() {
 		return this.force;
@@ -121,18 +138,11 @@ public abstract class Projectile extends MoveableGameObject {
 	}
 	
 	public boolean stopJump(Position position) {
-		return ( getWorld().isImpassable(position.getX(), position.getY(), getRadius())
+		return ( getWorld().isImpassable(position, getRadius())
 		         || getWorld().overlapWithObjectOfType(Worm.class, position, getRadius())
 		         || (getPosition().getDistanceTo(position) > getRadius()
-                      && getWorld().isAdjacent(position.getX(), position.getY(), getRadius())) );
+                      && getWorld().isAdjacent(position, getRadius())) );
 	}
-
-
-	/**
-	 * Variable registering the Earth’s standard acceleration that applies to all worms.
-	 */
-	private static final double G = 9.80665;
-
 	
 	/**
 	 * Returns in-flight positions of a jumping worm at any dt seconds after launch.w
@@ -153,8 +163,10 @@ public abstract class Projectile extends MoveableGameObject {
 	 *       | ! canJump()
 	 */
 	public Position jumpStep(double dt) {	
-		double xdt = getPosition().getX() + (initialVelocityX()*dt);
-		double ydt = getPosition().getY() + (initialVelocityY()*dt) - 0.5*G*Math.pow(dt, 2);
+		double initialVelocityX = initialVelocity() * Math.cos(getDirection());
+		double initialVelocityY = initialVelocity() * Math.sin(getDirection());
+		double xdt = getPosition().getX() + (initialVelocityX * dt);
+		double ydt = getPosition().getY() + (initialVelocityY * dt) - 0.5 * World.ACCELERATION * Math.pow(dt, 2);
 		return new Position(xdt,ydt);
 	}
 	
@@ -175,27 +187,4 @@ public abstract class Projectile extends MoveableGameObject {
 		return getForce() * 0.5 / getMass();
 	}
 	
-	/**
-	 * Returns the x-component of the initial velocity of the worm
-	 * 
-	 * @return The x-component of the initial velocity equals the 
-	 * 	       product of the initial velocity of the worm and the 
-	 *         cosine of the direction of the worm.
-	 *  	 | result == ( initialVelocity() * Math.cos(getDirection()) )
-	 */
-	public double initialVelocityX() {
-		return initialVelocity() * Math.cos(getDirection());
-	}
-	
-	/**
-	 * Returns the y-component of the initial velocity of the worm
-	 * 
-	 * @return The y-component of the initial velocity equals the 
-	 * 	       product of the initial velocity of the worm and the 
-	 *         sine of the direction of the worm.
-	 *       | result == ( initialVelocity() * Math.sin(getDirection()) )
-	 */
-	public double initialVelocityY() {
-		return initialVelocity() * Math.sin(getDirection());
-	}
 }

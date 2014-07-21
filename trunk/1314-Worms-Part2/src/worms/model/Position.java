@@ -42,6 +42,9 @@ public class Position {
 		this.y = y;
 	}
 	
+	public Position(Position position) {
+		this(position.getX(),position.getY());
+	}
 	/**
 	 * Returns the x-coordinate of this position.
 	 */

@@ -1,6 +1,6 @@
 package worms.exceptions;
 import be.kuleuven.cs.som.annotate.*;
-import worms.model.*;
+
 
 @SuppressWarnings("serial")
 /**
@@ -23,9 +23,8 @@ public class IllegalNameException extends RuntimeException {
 	 * @post    The worm is equal to the given worm.
 	 *          | new.getWorm() == worm
 	 */
-	public IllegalNameException(String name, Worm worm) {
+	public IllegalNameException(String name) {
 		this.name = name;
-		this.worm = worm;
 	}
 	
 	/**
@@ -41,17 +40,5 @@ public class IllegalNameException extends RuntimeException {
 	 */
 	private final String name;
 	
-	/**
-	 * Return the worm of this illegal name exception.
-	 */
-	@Basic @Raw @Immutable
-	public Worm getWorm() {
-		return worm;
-	}
-	
-	/**
-	 * Variable referencing the worm of this illegal name exception.
-	 */
-	private final Worm worm;
 	
 }

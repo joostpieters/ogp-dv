@@ -149,7 +149,6 @@ public abstract class GameObject {
 	 */
 	private double radius;
 	
-	
 	/**
 	 * Check whether the given mass is a valid mass for a worm.
 	 * 
