@@ -17,10 +17,6 @@ public abstract class MoveableGameObject extends GameObject {
 		setDirection(direction);
 	}
 	
-	protected MoveableGameObject(World world) {
-		this(world,new Position(0,0),0,0);
-	}
-	
 	/**
 	 * Returns the current direction of this worm (in radians).
 	 */
@@ -96,7 +92,7 @@ public abstract class MoveableGameObject extends GameObject {
     	     |      && (Util.fuzzyLessThanOrEqualTo(angle, 2*Math.PI))
     		 |      && (isValidDirection(restrictDirection(getDirection() + angle))) )
      */
-    public boolean canAcceptForTurn(double angle) {
+    public boolean canTurn(double angle) {
     	return ( (Util.fuzzyGreaterThanOrEqualTo(angle, -2*Math.PI))
     	      && (Util.fuzzyLessThanOrEqualTo(angle, 2*Math.PI))
     		  && (isValidDirection(restrictDirection(getDirection() + angle))) );
@@ -114,7 +110,7 @@ public abstract class MoveableGameObject extends GameObject {
 	 *  	 | setDirection(restrictDirection(getDirection() + angle))
 	 */
 	public void turn(double angle) {
-		if (canAcceptForTurn(angle)){
+		if (canTurn(angle)){
 			setDirection(restrictDirection(getDirection() + angle));
 		}
 	}
@@ -123,9 +119,18 @@ public abstract class MoveableGameObject extends GameObject {
 	 * Variable registering the current direction of this worm (in radians).
 	 */
 	private double direction = 0;
-
-
-	public abstract double getForce();
+	
+	/**
+	 * Returns the mass of the worm.
+	 * 
+	 * @return The mass of the worm 
+	 *       | result == ( p*4/3*Math.PI*Math.pow(getRadius(), 3) )
+	 */
+	public double getMass() {
+		return getDensity()*4/3*Math.PI*Math.pow(getRadius(), 3);
+	}
+	
+	public abstract double getDensity();
 	
 
 }

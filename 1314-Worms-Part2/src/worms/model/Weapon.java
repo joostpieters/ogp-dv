@@ -6,8 +6,6 @@ public abstract class Weapon {
 	
 	public Weapon(Worm worm) 
 	  throws IllegalNameException{
-		if (worm != null)
-			worm.addAsWeapon(this);
 	}
 	
 	/**
@@ -98,9 +96,7 @@ public abstract class Weapon {
 	 * @return
 	 */
 	private boolean canShoot() {
-		return  (getWorm().getActionPoints() >= costOfShooting()) 
-				&&  ((getNbProjectiles() > 0) || (getNbProjectiles() == -1)) 
-				&& !(getWorm().getWorld().isImpassable(getWorm().getPosition().getX(), getWorm().getPosition().getY(), getWorm().getRadius()));
+		return (getNbProjectiles() > 0) || (getNbProjectiles() == -1);
 	}
 	
 	/**

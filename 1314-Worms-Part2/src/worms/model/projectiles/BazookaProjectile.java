@@ -1,5 +1,6 @@
-package worms.model;
+package worms.model.projectiles;
 import worms.exceptions.*;
+import worms.model.*;
 
 public class BazookaProjectile extends Projectile {
 

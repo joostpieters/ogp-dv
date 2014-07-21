@@ -387,7 +387,7 @@ public class Facade implements IFacade {
 	 */
 	public void addNewWorm(World world) {
 		double radiusWorm = 0.6;
-		Position pos = world.generateRandomAdjacentPosition(radiusWorm);
+		Position pos = world.getRandomAdjacentPosition(radiusWorm);
 		if (pos != null)
 			createWorm(world, pos.getX(), pos.getY(), Math.PI/3, radiusWorm, "Delphine");
 	}
@@ -402,8 +402,14 @@ public class Facade implements IFacade {
 	/**
 	 * Returns the active worm in the given world (i.e., the worm whose turn it is).
 	 */
-	public Worm getCurrentWorm(World world) {
-		return world.getCurrentWorm();
+	public Worm getCurrentWorm(World world) throws ModelException {
+		try {
+			Worm worm = (Worm) world.getCurrentPlayer();
+			return worm;
+		}
+		catch( ClassCastException exc ) {
+			throw new ModelException("Not of type worm!");
+		}
 	}
 
 	/**
@@ -437,7 +443,7 @@ public class Facade implements IFacade {
 	 * @return True if the given region is passable and adjacent to impassable terrain, false otherwise.
 	 */
 	public boolean isAdjacent(World world, double x, double y, double radius) {
-		return world.isAdjacent(x,y,radius);
+		return world.isAdjacent(new Position(x,y), radius);
 	}
 	
 	/**
@@ -460,7 +466,7 @@ public class Facade implements IFacade {
 	 * @return True if the given region is impassable, false otherwise.
 	 */
 	public boolean isImpassable(World world, double x, double y, double radius) {
-		return world.isImpassable(x, y, radius);
+		return world.isImpassable(new Position(x,y), radius);
 	} 
 
 	/**
@@ -517,7 +523,7 @@ public class Facade implements IFacade {
 	 * (For single-student groups that do not implement food, this method should have no effect)
 	 */
 	public void addNewFood(World world) {
-		Position position = world.generateRandomPosition(0.2);
+		Position position = world.getRandomPosition(0.2);
 		if (position != null)
 			createFood(world, position.getX(), position.getY());
 	}

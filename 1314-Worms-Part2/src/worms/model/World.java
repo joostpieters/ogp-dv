@@ -1,13 +1,11 @@
 package worms.model;
 import java.util.*;
-
 import be.kuleuven.cs.som.annotate.*;
 import worms.exceptions.*;
 import worms.util.Util;
 
 /**
- * A class of worlds involving a width, height, passableMap and a random number generator
- * and with game objects.
+ * A class of worlds involving a width, height, passableMap, a random number generator and with game objects.
  * 
  * @invar    The game objects attached to each world must be proper game objects for that world.
  * 		   | hasProperGameObjects()
@@ -71,21 +69,6 @@ public class World {
 	}
 	
 	/**
-	 * Variable registering the width the world.
-	 */
-	private final double width;
-	
-	/**
-	 * Variable registering the height of the world.
-	 */
-	private final double height;
-	
-	/**
-	 * Variable registering the upper bound on the width and height of a world.
-	 */
-	public static final double maxDimension = Double.MAX_VALUE;
-	
-	/**
 	 * Returns the width of this world.
 	 * 
 	 * @return The width of this world.
@@ -106,6 +89,21 @@ public class World {
 	}
 	
 	/**
+	 * Variable registering the width the world.
+	 */
+	private final double width;
+	
+	/**
+	 * Variable registering the height of the world.
+	 */
+	private final double height;
+	
+	/**
+	 * Variable registering the upper bound on the width and height of a world.
+	 */
+	public static final double maxDimension = Double.MAX_VALUE;
+	
+	/**
 	 * 
 	 * @return
 	 */
@@ -122,15 +120,21 @@ public class World {
 	}
 	
 	/**
+	 * Variable registering the Earth’s standard acceleration that applies to all worms.
+	 */
+	public static final double ACCELERATION = 9.80665;
+
+	
+	/**
 	 * Returns a random position in this world for a game object with given radius.
 	 * @return
 	 */
-	public Position generateRandomPosition(double radius) 
+	public Position getRandomPosition(double radius) 
 	  throws IllegalPositionException {
 		double x = radius + (width-2*radius) * random.nextDouble();
 		double y = radius + (height-2*radius) * random.nextDouble();
 		Position position = new Position(x,y);
-		if (!isInWorld(x,y,radius))
+		if ( !isInWorld(new Position(x,y), radius) )
 			throw new IllegalPositionException(position);
 		return position;
 	}
@@ -141,8 +145,8 @@ public class World {
 	 * @param radius
 	 * @return
 	 */
-	public Position generateRandomPerimeterPosition(double radius) {
-		Position randomPos = generateRandomPosition(radius);
+	public Position getRandomPerimeterPosition(double radius) {
+		Position randomPos = getRandomPosition(radius);
 		double xStart = randomPos.getX();
 		double yStart = randomPos.getY();
 		int nrOfPerimeter = random.nextInt(4);
@@ -158,43 +162,55 @@ public class World {
 	 *         the radius of the circular domain to be checked.
 	 * @return 
 	 */
-	public Position generateRandomAdjacentPosition(double radius) {
-		Position position  = generateRandomPerimeterPosition(radius);
+	public Position getRandomAdjacentPosition(double radius) {
+		Position position  = getRandomPerimeterPosition(radius);
 	    Position center = new Position(width/2, height/2);
 	    double maxDistance = position.getDistanceTo(center);
-	    double distance = 0;
 	    double step = Math.min(getPixelWidth(), getPixelHeight());
 	    double stepX = step * (width/2 - position.getX()) / (maxDistance);
 	    double stepY = step * (height/2 - position.getY()) / (maxDistance);
-	    while ( Util.fuzzyLessThanOrEqualTo(distance, maxDistance) ) {
+	    for (double distance = 0;  Util.fuzzyLessThanOrEqualTo(distance, maxDistance); distance += step) {
 	    	position = new Position( position.addToX(stepX).getX(), position.addToY(stepY).getY() );
-	    	if (isAdjacent(position.getX(), position.getY(), radius))
+	    	if (isAdjacent(position, radius))
 	    		return position;
-	    	distance += step;
 	    }
 		return null;
 	}
 	
 	/**
-	 * ALTERNATIVE: Returns a random adjacent position in this world for a game object with given radius.
-	 *
-	 * @param  radius
-	 *         the radius of the circular domain to be checked.
-	 * @return 
-	
-	public Position generateRandomAdjacentPosition(double radius) {
-		double direction = this.random.nextDouble() * (Math.PI * 2);
-		Position position = new Position(getWidth()/2, getHeight()/2);
+	 * 
+	 * @param object
+	 * @param maxDistance
+	 * @return
+	 * @throws IllegalPositionException
+	 */
+	public Position getAdjacentorPassablePositionTo(MoveableGameObject object, double maxDistance) 
+	  throws IllegalPositionException {
+		double radius = object.getRadius(); 
+		double direction = object.getDirection(); 
+		Position currentPos = new Position(object.getPosition());
+		
 		double step = Math.min(getPixelWidth(), getPixelHeight());
-		while (!isAdjacent(position.getX(),position.getY(), radius)) {
-			position = new Position( position.addToX((step * Math.cos(direction))).getX(), 
-					                 position.addToY((step * Math.sin(direction))).getY() );
-			if (! isInWorld(position.getX(), position.getY(), radius))
-				return null;
-		}
-		return position;
+		Position passablePos = null;
+		for (double distance = maxDistance; Util.fuzzyGreaterThanOrEqualTo(distance, 0.1); distance -= step ) {
+			Position tempPos = new Position(currentPos.addToX(distance*Math.cos(direction)).getX(), currentPos.addToY(distance*Math.sin(direction)).getY());
+			if ( isAdjacent(tempPos, radius) )
+				return tempPos;	
+			for ( double divergence = 0; Util.fuzzyLessThanOrEqualTo(divergence, 0.7875); divergence += 0.0175 ) {
+				Position tempPosDiverged = currentPos.rotateBy(divergence, distance, direction);
+				if (isAdjacent(tempPosDiverged, radius))
+					return tempPosDiverged;
+				tempPosDiverged = currentPos.rotateBy(-divergence, distance, direction);
+				if (isAdjacent(tempPosDiverged, radius))
+					return tempPosDiverged;
+			}
+			
+			if ( passablePos == null )
+				if (! isImpassable(tempPos, radius))
+					passablePos = tempPos;
+			}
+		return passablePos;		
 	}
-	*/
 		
 	/**
 	 * Checks whether the given circular region, defined by the 
@@ -209,8 +225,9 @@ public class World {
 	 * 
 	 * @return True if the given region is passable and adjacent to impassable terrain, false otherwise.
 	 */
-	public boolean isAdjacent(double x, double y, double radius) {
-		return (isInWorld(x, y, radius) && !isImpassable(x, y, radius) && isInWorld(x,y,1.1*radius)) && isImpassable(x, y, 1.1*radius) ;
+	public boolean isAdjacent(Position position, double radius) {
+		return (isInWorld(position, radius) && !isImpassable(position, radius) && 
+				isInWorld(position,1.1*radius)) && isImpassable(position, 1.1*radius);
 	}
 	
 	/**
@@ -225,8 +242,9 @@ public class World {
 	 *         The radius of the circle to check
 	 * @return 
 	 */
-	public boolean isInWorld(double x, double y, double radius) {
+	public boolean isInWorld(Position position, double radius) {
 		boolean isInWorld = true;
+		double x = position.getX(); double y = position.getY();
 		if ((x > getWidth()) || (x < 0) || (y > getHeight()) || (y < 0)) 
 			return !isInWorld;
 		double p1 = y - radius; double p2 = y + radius;
@@ -249,13 +267,13 @@ public class World {
 	 * @return True 
 	 *         if the given region is impassable, false otherwise.
 	 */
-	public boolean isImpassable(double x, double y, double radius) 
+	public boolean isImpassable(Position position, double radius) 
 	  throws IllegalDimensionException {
-		if (! isInWorld(x,y,radius) )
+		if (! isInWorld(position, radius) )
 			return true;
 		boolean passable = true;
-		double p1 = y - radius; double p2 = y + radius;
-	    double p3 = x - radius; double p4 = x + radius;
+		double p1 = position.getY() - radius; double p2 = position.getY() + radius;
+	    double p3 = position.getX() - radius; double p4 = position.getX() + radius;
 		int row1 = map.length - ((int) Math.ceil(p1/getPixelHeight()));
 		int row2 = map.length - ((int) Math.ceil(p2/getPixelHeight()));
 		int col1 = ((int) Math.ceil(p3/getPixelWidth())) - 1;
@@ -460,14 +478,14 @@ public class World {
 	 */
 	public void startNextTurn() {
 		if (!isGameFinished()) {
-			Worm activeWorm = getCurrentWorm();
-			activeWorm.setToActive(false);
-			List<Worm> worms = getGameObjectsOfType(Worm.class);
-			int index = worms.indexOf(activeWorm) + 1;
-			if( index == worms.size() )
+			Character activeCharacter = getCurrentPlayer();
+			activeCharacter.setToActive(false);
+			List<Character> characters = getGameObjectsOfType(Character.class);
+			int index = characters.indexOf(activeCharacter) + 1;
+			if( index == characters.size() )
 				index  = 0;
-			Worm nextWorm = worms.get(index);
-			nextWorm.setToActive(true);
+			Character nextCharacter = characters.get(index);
+			nextCharacter.setToActive(true);
 		}
 	}
 	
@@ -475,14 +493,14 @@ public class World {
 	 * 
 	 * @return
 	 */
-	public Worm getCurrentWorm() {
-		List<Worm> worms = getGameObjectsOfType(Worm.class);
-		for (Worm worm : worms)
-			if ( worm.isActive() && worm.isAlive())
-				return worm;
+	public Character getCurrentPlayer() {
+		List<Character> characters = getGameObjectsOfType(Character.class);
+		for (Character character : characters)
+			if ( character.isActive() && character.isAlive())
+				return character;
 		return null;
 	}
-	
+
 	/**
 	 * Returns the active projectile in the world, or null if no active projectile exists.
 	 */
@@ -511,7 +529,7 @@ public class World {
 	 * Returns whether the game in this world has finished.
 	 */
 	public boolean isGameFinished() {
-		if ( getGameObjectsOfType(Worm.class).size() == 1 || getCurrentWorm() == null) 
+		if ( getGameObjectsOfType(Worm.class).size() == 1 || getCurrentPlayer() == null) 
 			this.gameFinished = true;
 		else 
 			this.gameFinished = false;
@@ -549,6 +567,27 @@ public class World {
 	 * Variable registering whether or not this world is terminated.
 	 */
 	private boolean isTerminated;
+	
+	/**
+	 * ALTERNATIVE: Returns a random adjacent position in this world for a game object with given radius.
+	 *
+	 * @param  radius
+	 *         the radius of the circular domain to be checked.
+	 * @return 
+	
+	public Position generateRandomAdjacentPosition(double radius) {
+		double direction = this.random.nextDouble() * (Math.PI * 2);
+		Position position = new Position(getWidth()/2, getHeight()/2);
+		double step = Math.min(getPixelWidth(), getPixelHeight());
+		while (!isAdjacent(position.getX(),position.getY(), radius)) {
+			position = new Position( position.addToX((step * Math.cos(direction))).getX(), 
+					                 position.addToY((step * Math.sin(direction))).getY() );
+			if (! isInWorld(position.getX(), position.getY(), radius))
+				return null;
+		}
+		return position;
+	}
+	*/
 
 	
 	/**

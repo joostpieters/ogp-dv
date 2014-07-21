@@ -1,29 +1,30 @@
-package worms.model;
-
+package worms.model.weapons;
 import worms.exceptions.IllegalNameException;
+import worms.model.*;
+import worms.model.projectiles.*;
 
-public class Bazooka extends Weapon {
+public class Rifle extends Weapon {
 
-	public Bazooka(Worm worm) throws IllegalNameException {
+	public Rifle(Worm worm) throws IllegalNameException {
 		super(worm);
 	}
-	
+
 	@Override
 	public String getName() {
-		return "Bazooka";
+		return "Rifle";
 	}
-	
 	
 	@Override
 	public int costOfShooting() {
-		return 50;
+		return 10;
 	}
 
+	
 	@Override
 	public Projectile getProjectile(int yield) {
-		return new BazookaProjectile(getWorm(), yield);
+		return new RifleProjectile(getWorm(), yield);
 	}
-	
+
 	@Override
 	public int getNbProjectiles() {
 		return this.nbProjectiles;
@@ -37,7 +38,7 @@ public class Bazooka extends Weapon {
 
 	@Override
 	public void decreaseNbProjectilesWith(int amount) {
-		if (getNbProjectiles() > 0)	
+		if (getNbProjectiles() > 0)		
 			setNbProjectiles(getNbProjectiles()-amount);		
 	}
 
