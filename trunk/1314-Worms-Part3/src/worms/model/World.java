@@ -492,19 +492,20 @@ public class World {
 	/**
 	 * Starts a game in this world.
 	 * 
-	 * @effect The first character in this world is activated
-	 *        | getGameObjectsOfType(Character.class).get(0).setToActive(true)
-	 * @post   The game is started
-	 * 		  | new.hasStarted == true
-	 * @throws  IllegalStartException
-	 *          The world contains no characters.
-	 *        | getGameObjectsOfType(Character.class).size() < 1 
+	 * @effect | setIndexOfCurrentWorm(0)
+	 * @post     The game is started
+	 * 		   | new.hasStarted == true
+	 * @effect | startNextTurn()
+	 * @throws   IllegalStartException
+	 *           The world contains no characters.
+	 *         | getGameObjectsOfType(Character.class).size() < 1 
 	 */	
 	public void startGame() throws IllegalStartException {
 		if ( getGameObjectsOfType(Character.class).size() < 1 ) 
 			throw new IllegalStartException();
-		Character firstPlayer = getGameObjectsOfType(Character.class).get(0);
-		firstPlayer.setToActive(true);
+		
+		setIndexOfCurrentPlayer(0);
+		startNextTurn();
 		this.hasStarted = true;
 	}
 	
@@ -526,28 +527,59 @@ public class World {
 	 * 
 	 * @effect activeCharacter = getCurrentPlayer()
 	 * 		   activeCharacter.setToActive(false)
-	 * @effect List<Character> characters = getGameObjectsOfType(Character.class)
-	 * 		   if (index != characters.size()) 
+	 * @effect if (index != characters.size()) 
 	 *            then characters.get( characters.indexOf(activeCharacter) + 1 ).setToActive(true)
 	 * @effect if (index == characters.size()) 
 	 *            then characters.get(0).setToActive(true)
+	 * @effect setIndexOfCurrentPlayer(index)
 	 * @effect if (nextCharacter.hasProgram()) then ( nextCharacter.getProgram().execute() )
 	 * @effect if (nextCharacter.hasProgram()) then ( startNextTurn() )
 	 */
 	public void startNextTurn() {
+		int index;
 		Character activeCharacter = getCurrentPlayer();
-		activeCharacter.setToActive(false);
+		if (activeCharacter == null) 
+			index = getIndexOfCurrentPlayer();
+		else {
+			activeCharacter.setToActive(false);
+			index = getIndexOfCurrentPlayer() + 1;
+		}
 		List<Character> characters = getGameObjectsOfType(Character.class);
-		int index = characters.indexOf(activeCharacter) + 1;
 		if ( index == characters.size() )
 			index = 0;
 		Character nextCharacter = characters.get(index);
+		setIndexOfCurrentPlayer(index);
 		nextCharacter.setToActive(true);
+		
 		if (nextCharacter.hasProgram()) {
 			nextCharacter.getProgram().execute();
 			startNextTurn();
 		}
 	}
+
+	/**
+	 * returns the index of the current player.
+	 */
+	@Basic
+	public int getIndexOfCurrentPlayer() {
+		return this.IndexOfCurrentPlayer;
+	}
+	
+	/**
+	 * Sets the index of the current player to the given number.
+	 * @param index
+	 *        The new index of the current player.
+	 * @post  new.IndexOfCurrentWorm = index
+	 */
+	public void setIndexOfCurrentPlayer(int index) {
+		this.IndexOfCurrentPlayer = index;
+	}
+	
+	/** 
+	 * Variable registering the index of the current player in this world. 
+	 */ 
+	private int IndexOfCurrentPlayer; 
+
 	
 	/**
 	 * Returns the current player in this world.
@@ -589,7 +621,7 @@ public class World {
 	public String getWinner() {
 		String winner;
 		if (isGameFinished())
-			winner = getGameObjectsOfType(Worm.class).get(0).getName();
+			winner = getGameObjectsOfType(Character.class).get(0).getName();
 		else 
 			winner = null;
 		return winner;

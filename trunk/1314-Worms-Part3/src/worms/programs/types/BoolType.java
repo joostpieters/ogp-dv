@@ -4,12 +4,11 @@ import worms.programs.Type;
 
 public class BoolType extends Type {
 	
-
-	public BoolType(boolean value){
+	public BoolType(boolean value) {
 		this.value = value;
 	}
 	
-	public BoolType(){
+	public BoolType() {
 	}
 	
 	public Boolean getValue() {
@@ -26,7 +25,6 @@ public class BoolType extends Type {
 	public Class<BoolType> getType() {
 		return BoolType.class;
 	}
-
 	
 	@Override
 	public boolean equals(Object other) {
