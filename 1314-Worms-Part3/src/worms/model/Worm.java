@@ -377,10 +377,10 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 			throw new IllegalJumpException(); 
 		Position positionAfterJump = jumpStep(jumpTime(timeStep));
 		setPosition(positionAfterJump);
-		setActionPoints(MINPOINTS);
-		eat();
 		if (canFall())
 			fall();	
+		setActionPoints(MINPOINTS);
+		eat();
 	} 
 	
 	/**
