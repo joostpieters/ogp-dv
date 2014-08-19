@@ -1,11 +1,14 @@
 package worms.exceptions;
 
 @SuppressWarnings("serial")
+/**
+ * A class for signaling when a program is interrupted.
+ * 
+ * @author   Delphine Vandamme 
+ */
 public class InterruptException extends RuntimeException {
 
 	public InterruptException(int line, int column) {
-		//super("Program interrupted at " + line + ":" + column);
-
 		this.line = line;
 		this.column = column;
 	}

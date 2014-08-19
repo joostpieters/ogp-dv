@@ -13,6 +13,10 @@ import worms.model.programs.ParseOutcome;
 import worms.model.programs.ProgramParser;
 
 /**
+ * A class of programs with a program text and action handler, and an agent which executes the program.
+ * 
+ * @invar  The agent attached to each program must be a proper agent for that program.
+ * 		   | hasProperAgent()
  * @author Delphine
  *
  */
@@ -21,6 +25,7 @@ public class Program {
 	public Program(String programText, IActionHandler handler) {
 		if (!isValidHandler(handler))
 			throw new IllegalArgumentException();
+		
 		this.handler = handler;
 		this.programText = programText;
 	}
@@ -61,26 +66,7 @@ public class Program {
 		
 	}
 	
-	private Character agent;	
-
-	public int getLine() {
-		return this.line;
-	}
-	
-	public int getColumn() {
-		return this.column;
-	}
-	
-	public void setLine(int line) {
-		this.line = line;
-	}
-	
-	public void setColumn(int column) {
-		this.column = column;
-	}
-	
-	private int line = 0;
-	private int column = 0;
+	private Character agent;
 
 	/**
 	 * @return the globals
@@ -103,7 +89,6 @@ public class Program {
 			throw new IllegalArgumentException("Map does not contain this global!");
 		return globals.get(key);
 	}
-
 
 	private Map<String, Type> globals = new HashMap<String,Type>();
 	
@@ -133,5 +118,25 @@ public class Program {
 			setColumn( exc.getColumn() );
 		}
 	}
+	
+	public int getLine() {
+		return this.line;
+	}
+	
+	public int getColumn() {
+		return this.column;
+	}
+	
+	public void setLine(int line) {
+		this.line = line;
+	}
+	
+	public void setColumn(int column) {
+		this.column = column;
+	}
+	
+	private int line = 0;
+	
+	private int column = 0;
 	
 }

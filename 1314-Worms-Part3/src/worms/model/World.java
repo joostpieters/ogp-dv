@@ -10,11 +10,13 @@ import worms.util.Util;
  * 
  * @invar    The game objects attached to each world must be proper game objects for that world.
  * 		   | hasProperGameObjects()
+ * @invar    The current dimensions (width, height) of each world must be proper dimensions of this world.
+ *         | isValidDimension( getWidth(), getHeight() )
  * 
  * @author   Delphine Vandamme 
  */
 public class World {
-	
+	 
 	/**
 	 * Initialize this new world with given width, height, passableMap and random nr generator,
 	 * with no game objects attached to it.
@@ -27,52 +29,72 @@ public class World {
 	 * 		   A rectangular matrix indicating which parts of the terrain are passable and impassable.
 	 * @param  random 
 	 * 		   A random number generator, seeded with the value obtained from GUIOptions
-	 * @post   No game objects are attached to this new bank account.
-	 * 	     | new.getNbGameObjects() == 0 
+	 * @post   The width of this new world is equal to the given width.
+	 *       | new.getWidth() == width
+	 * @post   The height of this new world is equal to the given height.
+	 *       | new.getHeight() == height
+	 * @throws IllegalArgumentException
+	 *       | random != null 
+	 * @throws IllegalDimensionException
+	 *       | ! isValidDimension(width, height)
+	 * @throws IllegalArgumentException
+	 *       | ! isValidPassableMap(passableMap)
 	 */
 	@Raw 
-	public World(double width, double height, boolean[][] passableMap, Random random) {
+	public World(double width, double height, boolean[][] passableMap, Random random) 
+	  throws IllegalDimensionException, IllegalArgumentException {
 		if (! isValidDimension(width, height))
 			throw new IllegalDimensionException();
+		if (random == null)
+			throw new IllegalArgumentException("Random nr generator must be effective.");
+		if (! isValidPassableMap(passableMap))
+			throw new IllegalArgumentException("PassableMap must be valid."); 
+		
 		this.width = width;
 		this.height = height;
-		if (random != null)
-			this.random = random;
-		if (passableMap != null)
-			this.map = passableMap;
+		this.random = random;
+		this.map = passableMap;
 	}
 	
 	/**
+	 * Check whether the given passable map is a valid map for a world.
 	 * 
+	 * @param  map
+	 *         The passable map to check.
+	 * @return result == (map != null) && (map.length > 0) && (map[0].length > 0)
 	 */
-	private boolean[][] map;
+	public static boolean isValidPassableMap( boolean[][] map ) {
+		return (map != null) && (map.length > 0) && (map[0].length > 0);
+	}
+
+	/**
+	 * Variable registering the passable map of this world.
+	 */
+	private final boolean[][] map;
 	
 	/**
 	 * Variable registering the random number generator for this world.
 	 */
-	private Random random;
+	private final Random random;
 	
 	/**
-	 * Check whether the given height and width is a valid height and width for a worm.
+	 * Check whether the given height and width is a valid height and width for a world.
 	 * 
 	 * @param  width
 	 *         The width to check.
 	 * @param  height
 	 *         The height to check.
-	 * @return result == (width >= 0) && (width <= maxDimension) &&
-	 * 				     (height >= 0) && (height <= maxDimension)
+	 * @return result == (width >= 0) && (width <= maxDimension) && (height >= 0) && (height <= maxDimension)
 	 */
 	public static boolean isValidDimension(double width, double height) {
 		return (Util.fuzzyGreaterThanOrEqualTo(width, 0)) 
-				&& (Util.fuzzyLessThanOrEqualTo(width, maxDimension)) 
+				&& (Util.fuzzyLessThanOrEqualTo(width, MAX_DIMENSION)) 
 				&& (Util.fuzzyGreaterThanOrEqualTo(height, 0)) 
-				&& (Util.fuzzyLessThanOrEqualTo(height, maxDimension));
+				&& (Util.fuzzyLessThanOrEqualTo(height, MAX_DIMENSION));
 	}
 	
 	/**
 	 * Returns the width of this world.
-	 * 
-	 * @return The width of this world.
 	 */
 	@Basic @Raw
 	public double getWidth() {
@@ -81,8 +103,6 @@ public class World {
 
 	/**
 	 * Returns the height of this world.
-	 * 
-	 * @return The height of this world.
 	 */
 	@Basic @Raw
 	public double getHeight() {
@@ -102,49 +122,60 @@ public class World {
 	/**
 	 * Variable registering the upper bound on the width and height of a world.
 	 */
-	public static final double maxDimension = Double.MAX_VALUE;
+	public static final double MAX_DIMENSION = Double.MAX_VALUE;
 	
 	/**
+	 * Returns the width of a pixel.
 	 * 
-	 * @return
+	 * @return result == getWidth() / this.map[0].length
 	 */
 	public double getPixelWidth() {
-		return getWidth()/map[0].length;
+		return getWidth() / this.map[0].length;
 	}
 
 	/**
+	 * Returns the height of a pixel.
 	 * 
-	 * @return
+	 * @return result == getHeight() / this.map.length
 	 */
 	public double getPixelHeight() {
-		return getHeight()/map.length;
+		return getHeight() / this.map.length;
 	}
 	
 	/**
-	 * Variable registering the Earth’s standard acceleration that applies to all worms.
+	 * Variable registering the Earth’s standard acceleration that applies to all worlds.
 	 */
 	public static final double ACCELERATION = 9.80665;
 
 	
 	/**
 	 * Returns a random position in this world for a game object with given radius.
-	 * @return
+	 * 
+	 * @param  radius
+	 *         The radius of the game object for which to determine a random position.
+	 * @return result == new Position( radius + (width  - 2 * radius) * random.nextDouble(), 
+	 *                                 radius + (height - 2 * radius) * random.nextDouble() )
 	 */
-	public Position getRandomPosition(double radius) 
-	  throws IllegalPositionException {
-		double x = radius + (width-2*radius) * random.nextDouble();
-		double y = radius + (height-2*radius) * random.nextDouble();
+	public Position getRandomPosition(double radius) {
+		double x = radius + (width  - 2 * radius) * random.nextDouble();
+		double y = radius + (height - 2 * radius) * random.nextDouble();
 		Position position = new Position(x,y);
-		if ( !isInWorld(new Position(x,y), radius) )
-			throw new IllegalPositionException(position);
-		return position;
+		if ( isInWorld(position, radius) )
+			return position;
+		else 
+			return null;
 	}
 	
 	
 	/**
+	 * Returns a random position on one of the four perimeters of this world.
 	 * 
-	 * @param radius
-	 * @return
+	 * @param  radius
+	 *         The radius of the circular region around the position.
+	 * @return result == ( new Position(getRandomPosition(radius).getX(), 0) || 
+	 *                     new Position(getRandomPosition(radius).getX(), getHeight()) ||
+	 *                     new Position(0, getRandomPosition(radius).getY()) || 
+	 *                     new Position(getWidth, getRandomPosition(radius).getY()) )
 	 */
 	public Position getRandomPerimeterPosition(double radius) {
 		Position randomPos = getRandomPosition(radius);
@@ -160,16 +191,16 @@ public class World {
 	 * Returns a random adjacent position in this world for a game object with given radius.
 	 *
 	 * @param  radius
-	 *         the radius of the circular domain to be checked.
-	 * @return 
+	 *         The radius of the circular domain to be checked.
+	 * @return a random position adjacent to impassable terrain 
 	 */
 	public Position getRandomAdjacentPosition(double radius) {
 		Position position  = getRandomPerimeterPosition(radius);
-		Position center = new Position(width/2, height/2);
+		Position center = new Position(getWidth() / 2, getHeight() / 2);
 	    double maxDistance = position.getDistanceTo(center);
-	    double step = radius/10;
-	    double stepX = step * (width/2 - position.getX()) / (maxDistance);
-	    double stepY = step * (height/2 - position.getY()) / (maxDistance);
+	    double step = Util.DEFAULT_EPSILON;
+	    double stepX = step * (getWidth()  / 2 - position.getX()) / (maxDistance);
+	    double stepY = step * (getHeight() / 2 - position.getY()) / (maxDistance);
 	    for (double distance = 0;  Util.fuzzyLessThanOrEqualTo(distance, maxDistance); distance += step) {
 	    	position = position.addToX(stepX).addToY(stepY);
 	    	if (isAdjacent(position, radius))
@@ -179,27 +210,32 @@ public class World {
 	}
 	
 	/**
-
-	 * @param object
-	 * @param maxDistance
-	 * @return
-	 * @throws IllegalPositionException
+     * Returns an adjacent or passable position in a certain region around the given mobile game object.
+     * 
+	 * @param  object
+	 *         Mobile game object which determines the region in which the position is to be found.
+	 * @param  maxDistance
+	 *         The maximal distance between the position of the game object and the new position.
+	 * @return result == for each 
 	 */
-	public Position getAdjacentorPassablePositionTo(MoveableGameObject object, double maxDistance) 
-	  throws IllegalPositionException {
+	public Position getAdjacentorPassablePositionTo(MobileGameObject object, double maxDistance) {
 		double radius = object.getRadius(); 
 		double direction = object.getDirection(); 
 		Position currentPos = new Position(object.getPosition());
-		double step = radius/10;
+		double step = radius / 100;
 		Position passablePos = null;
 		for (double distance = maxDistance; Util.fuzzyGreaterThanOrEqualTo(distance, 0.1); distance -= step ) {
+			
 			Position tempPos = currentPos.addToX(distance*Math.cos(direction)).addToY(distance*Math.sin(direction));
 			if ( isAdjacent(tempPos, radius) )
 				return tempPos;	
+			
 			for ( double divergence = 0; Util.fuzzyLessThanOrEqualTo(divergence, 0.7875); divergence += 0.0175 ) {
+				
 				Position tempPosDiverged = currentPos.rotateBy(divergence, distance, direction);
 				if (isAdjacent(tempPosDiverged, radius))
 					return tempPosDiverged;
+				
 				tempPosDiverged = currentPos.rotateBy(-divergence, distance, direction);
 				if (isAdjacent(tempPosDiverged, radius))
 					return tempPosDiverged;
@@ -215,14 +251,12 @@ public class World {
 	 * Checks whether the given circular region, defined by the 
 	 * given center coordinates and radius, is passable and adjacent to impassable terrain. 
 	 * 
-	 * @param x 
-	 *        The x-coordinate of the center of the circle to check  
-	 * @param y 
-	 *        The y-coordinate of the center of the circle to check
+	 * @param position 
+	 *        The position of the center of the circle to check.
 	 * @param radius 
 	 *        The radius of the circle to check
-	 * 
-	 * @return True if the given region is passable and adjacent to impassable terrain, false otherwise.
+	 * @return result == (isInWorld(position, radius) && !isImpassable(position, radius) && 
+				          isInWorld(position,1.1*radius)) && isImpassable(position, 1.1*radius)
 	 */
 	public boolean isAdjacent(Position position, double radius) {
 		return (isInWorld(position, radius) && !isImpassable(position, radius) && 
@@ -230,16 +264,14 @@ public class World {
 	}
 	
 	/**
-	 * Checks whether the given circular region, defined by the
-	 * given center coordinates and radius, is located in this world.
+	 * Checks whether the given circular region, defined by the given center coordinates and radius, is located in this world.
 	 * 
-	 * @param  x
-	 * 		   The x-coordinate of the center of the circle to check  
-	 * @param  y
-	 * 		   The y-coordinate of the center of the circle to check  
+	 * @param  position 
+	 *         The position of the center of the circle to check.
 	 * @param  radius
 	 *         The radius of the circle to check
-	 * @return 
+	 * @return result == ((position.getY() - radius) > 0) && ((position.getY() + radius) < getHeight()) &&
+	 * 					 ((position.getX() - radius) > 0) && ((position.getX() + radius) < getWidth())
 	 */
 	public boolean isInWorld(Position position, double radius) {
 		boolean isInWorld = true;
@@ -254,20 +286,17 @@ public class World {
 	}
 	
 	/**
-	 * Checks whether the given circular region of this world,
-	 * defined by the given center coordinates and radius, is impassable. 
+	 * Checks whether the given circular region of this world, defined by the given center coordinates and radius, is impassable. 
 	 * 
-	 * @param x 
-	 *        The x-coordinate of the center of the circle to check  
-	 * @param y 
-	 *        The y-coordinate of the center of the circle to check
-	 * @param radius 
-	 *        The radius of the circle to check 
+	 * @param  position
+	 *         The position of the center of the circle to check 
+	 * @param  radius 
+	 *         The radius of the circle to check 
 	 * @return True 
 	 *         if the given region is impassable, false otherwise.
 	 */
 	public boolean isImpassable(Position position, double radius) 
-	  throws IllegalDimensionException {
+	  throws IllegalDimensionException, IllegalStateException {
 		if (! isInWorld(position, radius) )
 			return true;
 		boolean passable = true;
@@ -275,12 +304,14 @@ public class World {
 	    double p3 = position.getX() - radius; double p4 = position.getX() + radius;
 		int row1 = map.length - ((int) Math.ceil(p1/getPixelHeight()));
 		int row2 = map.length - ((int) Math.ceil(p2/getPixelHeight()));
-		int col1 = ((int) Math.ceil(p3/getPixelWidth())) - 1;
-		int col2 = ((int) Math.ceil(p4/getPixelWidth())) - 1;
-		for (int r = row2; r <= row1; r++) {//controleer hier op geldigheid! 0<=col<map[0].length en 0<=row<map.length
+		int col1 = ((int) Math.ceil(p3 / getPixelWidth())) - 1;
+		int col2 = ((int) Math.ceil(p4 / getPixelWidth())) - 1;
+		for (int r = row2; r <= row1; r++) {
 			for (int c = col1; c <= col2; c++) {
-				passable = map[r][c];
-				if (! passable)
+				if ( (c < 0)|| (c >= this.map[0].length) || (r < 0)|| (r >= this.map.length) )
+					throw new IllegalStateException();
+				passable = map[r][c]; 
+				if (! map[r][c])
 					return !passable;
 			}
 		}
@@ -288,8 +319,7 @@ public class World {
 	}
 	
 	/**
-	 * Check whether this world has the given game object as one
-	 * of the game objects attached to it.
+	 * Check whether this world has the given game object as one of the game objects attached to it.
 	 * 
 	 * @param object
 	 * 		  The game object to check.
@@ -375,7 +405,6 @@ public class World {
 			this.objects.remove(object);
 			if (object instanceof Projectile) 
 				this.activeProjectile = null;
-			//object.setWorld(null);
 		}
 	}
 	
@@ -394,8 +423,7 @@ public class World {
 	 * List collecting references to game objects attached to this world.
 	 * 
 	 * @invar objects != null
-	 * @invar for each object in objects:
-	 *          canHaveAsGameObject(object)
+	 * @invar for each object in objects: canHaveAsGameObject(object)
 	 * @invar for each object in objects:
 	 * 		     ( (object == null) || canHaveAsGameObject(object) )
 	 */
@@ -405,7 +433,7 @@ public class World {
 	 * Returns all the game objects of the given type in this world.
 	 * 
 	 * @param    type
-	 *           The type of gameObject of the objects to be added to the list.
+	 *           The type of game objects to be added to the list.
 	 * @return   All the game objects of the given type attached to this world.
 	 * 		   | for each object in GameObject:
 	 *         |    (result.contains(object) == this.hasAsGameObject(object) && type.isInstance(object))
@@ -420,9 +448,18 @@ public class World {
 	}
 
 	/**
+	 * Returns a list with all the game objects of the given type which overlap with the region at the given 
+	 * position and with given radius.
 	 * 
-	 * @param gameObject
-	 * @return
+	 * @param  type
+	 * 		   The type of game objects to be added to the list.
+	 * @param  position
+	 *         The position of the center of the circular region to check.
+	 * @param  radius
+	 *         The radius of the circular region to check.
+	 * @return for each object in GameObject:
+	 *             ( result.contains(object) == this.hasAsGameObject(object) && type.isInstance(object)
+	 *               && (position.getDistanceTo(object.getPosition())) < (radius + object.getRadius()) )
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends GameObject> List<T> getOverlappingObjectsOfType(Class<T> type, Position position, double radius) {
@@ -436,11 +473,16 @@ public class World {
 	}
 	
 	/**
+	 * Returns whether or not there is overlap with a game object of the given type in a circular 
+	 * region with given position and radius.
 	 * 
-	 * @param <T>
-	 * @param position
-	 * @param radius
-	 * @return
+	 * @param type
+	 *        The type of game objects to check for overlap.
+	 * @param  position
+	 *         The position of the center of the circular region to check.
+	 * @param  radius
+	 *         The radius of the circular region to check.
+	 * @return result == ! getOverlappingObjectsOfType(type, position, radius).isEmpty()
 	*/
 	public <T extends GameObject> boolean overlapWithObjectOfType(Class<T> type, Position position, double radius) {
 		List<T> overlappingObjects = getOverlappingObjectsOfType(type, position, radius);
@@ -449,20 +491,27 @@ public class World {
 	
 	/**
 	 * Starts a game in this world.
-	 */
+	 * 
+	 * @effect The first character in this world is activated
+	 *        | getGameObjectsOfType(Character.class).get(0).setToActive(true)
+	 * @post   The game is started
+	 * 		  | new.hasStarted == true
+	 * @throws  IllegalStartException
+	 *          The world contains no characters.
+	 *        | getGameObjectsOfType(Character.class).size() < 1 
+	 */	
 	public void startGame() throws IllegalStartException {
-		if ( getGameObjectsOfType(Worm.class).size() < 1) 
+		if ( getGameObjectsOfType(Character.class).size() < 1 ) 
 			throw new IllegalStartException();
-		Worm firstWorm = getGameObjectsOfType(Worm.class).get(0);
-		firstWorm.setToActive(true);
+		Character firstPlayer = getGameObjectsOfType(Character.class).get(0);
+		firstPlayer.setToActive(true);
 		this.hasStarted = true;
 	}
 	
 	/**
 	 * Checks whether the game has started.
-	 * 
-	 * @return True if and only If the game has started.
 	 */
+	@Basic
 	public boolean hasStarted() {
 		return this.hasStarted;
 	}
@@ -474,13 +523,23 @@ public class World {
 	
 	/**
 	 * Starts the next turn in this world.
+	 * 
+	 * @effect activeCharacter = getCurrentPlayer()
+	 * 		   activeCharacter.setToActive(false)
+	 * @effect List<Character> characters = getGameObjectsOfType(Character.class)
+	 * 		   if (index != characters.size()) 
+	 *            then characters.get( characters.indexOf(activeCharacter) + 1 ).setToActive(true)
+	 * @effect if (index == characters.size()) 
+	 *            then characters.get(0).setToActive(true)
+	 * @effect if (nextCharacter.hasProgram()) then ( nextCharacter.getProgram().execute() )
+	 * @effect if (nextCharacter.hasProgram()) then ( startNextTurn() )
 	 */
 	public void startNextTurn() {
 		Character activeCharacter = getCurrentPlayer();
 		activeCharacter.setToActive(false);
 		List<Character> characters = getGameObjectsOfType(Character.class);
 		int index = characters.indexOf(activeCharacter) + 1;
-		if( index == characters.size() )
+		if ( index == characters.size() )
 			index = 0;
 		Character nextCharacter = characters.get(index);
 		nextCharacter.setToActive(true);
@@ -491,8 +550,14 @@ public class World {
 	}
 	
 	/**
+	 * Returns the current player in this world.
 	 * 
-	 * @return
+	 * @return  List<Character> characters = getGameObjectsOfType(Character.class)
+	 * 			for each character in characters :
+	 *             ( characters.contains(character) == this.hasAsGameObject(character) && Character.class.isInstance(character) &&
+	 *                                              character.isActive() && character.isAlive() )
+	 *         if (!characters.isEmpty()) then result == characters.get(0)
+	 *         else result == null
 	 */
 	public Character getCurrentPlayer() {
 		List<Character> characters = getGameObjectsOfType(Character.class);
@@ -505,17 +570,21 @@ public class World {
 	/**
 	 * Returns the active projectile in the world, or null if no active projectile exists.
 	 */
+	@Basic
 	public Projectile getActiveProjectile() {
-		return activeProjectile;
+		return this.activeProjectile;
 	}
 	
+	/**
+	 * Variable registering the active projectile in this world.
+	 */
 	private Projectile activeProjectile;
 
 	/**
-	 * Returns the name of a single worm if that worm is the winner, or the name
-	 * of a team if that team is the winner. This method should null if there is no winner.
+	 * Returns the name of a single worm if that worm is the winner or null if there is no winner.
 	 * 
-	 * (For single-student groups that do not implement teams, this method should always return the name of the winning worm, or null if there is no winner)
+	 * @return if (isGameFinished()) then result == getGameObjectsOfType(Worm.class).get(0).getName()
+	 *         else result == null
 	 */
 	public String getWinner() {
 		String winner;
@@ -528,32 +597,15 @@ public class World {
 	
 	/**
 	 * Returns whether the game in this world has finished.
+	 * 
+	 * @return result == (getGameObjectsOfType(Character.class).size() == 1)
 	 */
 	public boolean isGameFinished() {
-		if ( getGameObjectsOfType(Worm.class).size() == 1 || getCurrentPlayer() == null) 
-			this.gameFinished = true;
+		List<Character> characters =  getGameObjectsOfType(Character.class);
+		if ( !characters.isEmpty() ) 
+			return ( characters.size() == 1 );
 		else 
-			this.gameFinished = false;
-		return this.gameFinished;
-	}
-	
-	private boolean gameFinished = false;
-
-	/**
-	 * Terminate this world.
-	 * 
-	 * @post   new.isTerminated()
-	 * @effect for each object in getAllGameObjects():
-	 *           if (object.isAlive())
-	 *             then this.removeAsGameObject(object)
-	 */
-	public void terminate() {
-		for (GameObject object: objects) 
-			if (object.isAlive()) {
-				object.setWorld(null);
-				 removeAsGameObject(object);
-			}
-		this.isTerminated = true;
+			return false;
 	}
 	
 	/**
@@ -569,383 +621,23 @@ public class World {
 	 */
 	private boolean isTerminated;
 
+	/**
+	 * Adds a worm with random position, random radius, random name and given program to this world.
+	 * 
+	 * @param  program
+	 *         The program to be attached to the new worm.
+	 * @effect addAsGameObject( new Worm(this, getRandomAdjacentPosition(randomRadius), 2 * Math.PI * random.nextDouble(),
+	 *                          0.25 + random.nextDouble()/2, Worm.WORMNAMES.get(random.nextInt(Worm.WORMNAMES.size())), program) )
+	 *         
+	 */
 	@SuppressWarnings("unused")
-	public void addRandomWorm(Program program) throws IllegalStateException {
+	public void addRandomWorm(Program program) {
 		double radius =  0.25 + random.nextDouble()/2;
 		double direction = 2 * Math.PI * random.nextDouble();
-		String name = Character.characterNames.get(random.nextInt(Character.characterNames.size()));
+		String name = Worm.WORMNAMES.get(random.nextInt(Worm.WORMNAMES.size()));
 		Position position = getRandomAdjacentPosition(radius);
 		Worm worm = null;
 		if (position != null)
 			 worm = new Worm(this, position, direction, radius, name, program);
 	}
-		
-	/**
-	 * ALTERNATIVE: Returns a random adjacent position in this world for a game object with given radius.
-	 *
-	 * @param  radius
-	 *         the radius of the circular domain to be checked.
-	 * @return 
-	
-	public Position generateRandomAdjacentPosition(double radius) {
-		double direction = this.random.nextDouble() * (Math.PI * 2);
-		Position position = new Position(getWidth()/2, getHeight()/2);
-		double step = Math.min(getPixelWidth(), getPixelHeight());
-		while (!isAdjacent(position, radius)) {
-			position = new Position( position.addToX((step * Math.cos(direction))).getX(), 
-					                 position.addToY((step * Math.sin(direction))).getY() );
-			if (! isInWorld(position, radius))
-				return null;
-		}
-		return position;
-	}
-	*/
-
-	
-	/**
-	 * Return the number of game objects attached to this world.
-	 
-	@Basic @Raw
-	public int getNbGameObjects() {
-		int nbObjectsSoFar = 0;
-		// @invar nbObjectsSoFar == 
-		//          card({{ object in GameObject |
-		//                    for some I in 0..pos-1: object == objects.get(i) }})                             
-		for (int pos = 0; pos < objects.size(); pos++) {
-			GameObject currentObject = objects.get(pos);
-			if ( (currentObject != null) && (objects.indexOf(currentObject) == pos) )
-				nbObjectsSoFar++;
-		}
-		return nbObjectsSoFar;
-	}
-	*/
-	
-	/**
-	 * Check whether this world has the given game object as one
-	 * of the game objects attached to it.
-	 * 
-	 * @param object
-	 * 		  The game object to check.
-	 
-	@Basic @Raw
-	public boolean hasAsGameObject(GameObject object) {
-		return this.objects.contains(object);
-	}
-	*/
-	/**
-	 * Return the game object attached to this world at the given index.
-	 * 
-	 * @param  index
-	 *         The index of the game object to be returned.
-	 * @throws IndexOutOfBoundsException
-	 *         (index < 1) || (index > getNbGameObjects())
-	 
-	@Basic @Raw
-	public GameObject getGameObjectAt(int index)
-	  throws IndexOutOfBoundsException {
-		return objects.get(getInternalIndexOfGameObjectAt(index));
-	}
-	
-	*/
-	/**
-	 * Check whether this world can have the given game object as one
-	 * of its game objects.
-	 * 
-	 * @param  object
-	 * 		   The game object to check.
-	 * @return if (object == null)
-	 * 			 then result == false
-	 * 	       else if ( this.isTerminated() || !object.isAlive() )
-	 *           then result == false
-	 
-	@Raw
-	public boolean canHaveAsGameObject(GameObject object) {
-		return ( (object != null) && (! this.isTerminated()) 
-				 && (object.isAlive()) ) ;
-	}
-	*/
-	
-	/**
-	 * Check whether this game object can have the given game object 
-	 * as one of its game objects at the given index.
-	 * 
-	 * @param  object
-	 *         The game object to check.
-	 * @param  index
-	 *         The index to check.
-	 * @return if (! canHaveAsGameObect(object))
-	 *           then result == false
-	 *         else if ( (index < 1) || (index > getNbGameObjects()+1) )
-	 *           then result == false
-	 *         else result == 
-	 *           for each I in 1..getNbGameObjects():
-	 *             ( (I == index) || (getGameObjectAt(I) != object) )
-	
-	@Raw
-	public boolean canHaveAsGameObjectAt(GameObject object, int index) {
-		if (! canHaveAsGameObject(object))
-			return false;
-		if ( (index < 1) || (index > getNbGameObjects()+1) )
-			return false;
-		for (int i=1; i<=getNbGameObjects(); i++)
-			if ( (i != index) && (getGameObjectAt(i) == object) )
-				return false;
-		return true;
-	}
-	*/ 
-	
-	/**
-	 * Check whether this world has proper game objects attached to it.
-	 * 
-	 * @return result == for each I in 1..getNbGameObjects():
-	 * 					    canHaveAsGameObjectAt(getGameObjectAt(I),I)
-	 
-	@Raw
-	public boolean hasProperGameObjects() {
-		for (int i=1; i<=getNbGameObjects(); i++)
-			if (! canHaveAsGameObjectAt(getGameObjectAt(i), i))
-				return false;
-		return true;
-	}
-	*/
-	
-	/**
-	 * Return the index at which the game object with the given ranking is registered 
-	 * for the first time in the internal list of game objects.
-	 * 
-	 * @param  ranking
-	 *         The ranking of the game object to search.
-	 * @return if (ranking <= 0)
-	 *           then result == -1
-	 * @return if (ranking > 0) 
-	 *           then objects.get(result) != null
-	 * @return if (ranking > 0) then
-	 *           for each I in 0..result-1:
-	 *             (objects.get(i) != objects.get(result))
-	 * @return if (ranking > 0) then
-	 *           ranking == card ({{ object in GameObject |
-	 *                                  for some I in 0..result:
-	 *                                    (object == objects.get(i)) }})
-	 * @throws IndexOutOfBoundsException
-	 *         ranking >= getNbGameObjects()
-	
-	private int getInternalIndexOfGameObjectAt(int ranking)
-	  throws IndexOutOfBoundsException {
-		int nbObjectsSoFar = 0;
-		int pos = 0;
-		// @invar nbOfObjectsSoFar counts the number of different and effective 
-		//        game objects registered at positions before pos.
-		//      | nbObjectsSoFar == card ({{ object in GameObject |
-		//                             for some I in 0..pos-1:
-		//                                    (object == objects.get(i)) }})          
-		while (nbObjectsSoFar < ranking) {
-			GameObject currentObject = objects.get(pos);
-			if ( (currentObject != null) && (objects.indexOf(currentObject) == pos) )
-				nbObjectsSoFar++;
-			pos++;
-		}
-		return (pos - 1);
-	}
-	 */
-	
-	/**
-	 * Return a list of all game objects attached to this world.
-	 * 
-	 * @return result.size() == getNbGameObjects()
-	 * @return for each I in 0..getNbGameObjects()-1:
-	 *           (result.get(I) == getGameObjectAt(I+1))
-	 
-	public List<GameObject> getAllGameObjects() {
-		LinkedList<GameObject> result = new LinkedList<GameObject>();
-		for (int i=objects.size(); i<=0; i--)
-			if (! result.contains(objects.get(i)))
-				result.addFirst(objects.get(i));
-		return result;
- 	}
-	*/
-	
-	/**
-	 * Return a list of all game objects attached to this world.
-	 * 
-	 * @return result.size() == getNbGameObjects()
-	 * @return for each I in 0..getNbGameObjects()-1:
-	 *           (result.get(I) == getGameObjectAt(I+1))
-	 
-	public List<GameObject> getAllGameObjects() {
-		List<GameObject> result = new  ArrayList<GameObject>();
-		for (GameObject object: objects)
-				result.add(object);
-		return result;
-		
-		//List<Weapon> result = new ArrayList<Weapon>();
-		//for (Weapon weapon : weapons)
-		//		result.add(weapon);
- 	}
-	 */
-	
-	/**
-	 * Add the given game object to this world.
-	 * 
-	 * @param  object
-	 *         The game object to be added.
-	 * @post   new.getGameObjectAt(getNbGameObjects()+1) == object
-	 * @post   new.getgetNbGameObjects() == getNbGameObjects() + 1
-	 * @throws IllegalArgumentException
-	 *         ! canHaveAsGameObjectAt(object, getNbGameObjects()+1)
-	 
-	public void addAsGameObject(GameObject object) 
-	  throws IllegalArgumentException {
-		if (! canHaveAsGameObject(object))
-			throw new IllegalArgumentException();
-		if ( (! objects.isEmpty()) && (objects.get(objects.size() - 1) == null) )
-			objects.set(objects.size()-1, object);
-		else 
-			objects.add(object);
-	}
-	*/
-	
-	/**
-	 * 
-
- 
- the given game object attached to this world.
-	 * 
-	 * @param  object
-	 *         The game object to be removed from this world.
-	 * @effect if (hasAsGameObject(object)) then removeGameObjectAt(getIndexOfGameObject(object))
-	
-	public void removeAsGameObject(GameObject object) {
-		int firstIndexOfObject = objects.indexOf(object);
-		while (firstIndexOfObject != -1) {
-			objects.set(firstIndexOfObject, null);
-			firstIndexOfObject = objects.indexOf(object);
-		}
-	}
-	 */
-	
-	/**
-	 * Add the given game object as a game object for this world at the given index.
-	 * 
-	 * @param  object
-	 *         The game object to be added.
-	 * @param  index
-	 *         The index of the game object to be added.
-	 * @post   new.getGameObjectAt(index) == object
-	 * @post   new.getNbGameObjects() == getNbGameobjects + 1
-	 * @post   for each I in index..getNbGameObjects():
-	 *           (new.getGameObjectAt(I+1) == getGameObjectAt(I))
-	 * @throws IllegalArgumentException
-	 *         ! canHaveAsGameObjectAt(object, index)
-	 
-	public void addGameObjectAt(GameObject object, int index)
-	  throws IllegalArgumentException {
-		if (! canHaveAsGameObjectAt(object, index))
-			throw new IllegalArgumentException("Invalid game object");
-		int indexOfNewObject = getInternalIndexOfGameObjectAt(index-1)+1;
-	    if (indexOfNewObject < objects.size()) {
-	    	GameObject oldObject = objects.get(indexOfNewObject);
-	    	if ( (oldObject == null) || (objects.indexOf(oldObject) < indexOfNewObject) )
-	    		objects.set(indexOfNewObject, object);
-	    	else
-	    		objects.add(indexOfNewObject,object);
-	    }
-	    else
-	    	objects.add(object);
-	}
-	*/
-	
-	/**
-	 * Remove the game object for this world at the given index.
-	 * 
-	 * @param  index
-	 *         The index of the game object to be removed.
-	 * @post   ! new.hasAsGameObject(getGameObjectAt(index))
-	 * @post   new.getNbGameObjects() ==  this.getNbGameObjects - 1
-	 * @post   for each I in index+1..getNbGameObjects():
-	 *            (new.getGameObjectAt(I-1) == this.getGameObjectAt(I))
-	 * @throws IndexOutOfBoundsException
-	 *         (index < 1) || (index > getNbGameObjects())
-	 
-	public void removeGameObjectAt(int index) 
-	  throws IndexOutOfBoundsException {
-		int indexOfObject = getInternalIndexOfGameObjectAt(index);
-		GameObject objectToRemove = objects.get(indexOfObject);
-		for (int pos=indexOfObject; pos<objects.size(); pos++)
-			if (objects.get(pos) == objectToRemove)
-				objects.set(pos, null);
-	}
-	 */
-	
-	/**
-	 * Returns all the worms in this world.
-	 * 
-	 * @return
-	 
-	public List<Worm> getWorms() {
-		List<Worm> result = new ArrayList<Worm>();
-		for (GameObject object : objects) 
-			if (Worm.class.isInstance(object)) {
-				Worm worm = (Worm) object;
-				if(worm.isAlive())
-					result.add(worm);
-			}				
-		return result;
-	}
-	
-	public Collection<Food> getFood() {
-		List<Food> result = new ArrayList<Food>();
-		for (GameObject object : objects) 
-			if (Food.class.isInstance(object)) {
-				Food food = (Food) object;
-				if(food.isAlive())
-					result.add(food);
-			}				
-		return result;
-	}
-	*/
-	
-	/**
-	 * 
-	 * @param gameObject
-	 * @return
-	 
-	public List<GameObject> getOverlappingObjectsWith(Position position, double radius) {
-		List<GameObject> result = new ArrayList<GameObject>();
-		List<GameObject> objects = getAllGameObjects();
-		for (GameObject object: objects){
-			if ((position.getDistanceTo(object.getPosition())) < (radius + object.getRadius()))
-				result.add(object);
-		}
-		return result;
-	}
-	*/
-	/**
-	 * 
-	 * @param object
-	 * @return
-	 
-	public List<Worm> getOverlappingWormsWith(Position position, double radius) {
-		List<Worm> result = new ArrayList<Worm>();
-		List <GameObject> overlappingObjects = getOverlappingObjectsWith(position, radius);
-		for (GameObject overlappingObject: overlappingObjects) {
-			if (Worm.class.isInstance(overlappingObject)) {
-				Worm worm = (Worm) overlappingObject;
-				result.add(worm);
-			}		
-		}
-		return result;
-	}
-*/
-	/**
-	 * 
-	 * @param position
-	 * @param radius
-	 * @return
-	 
-	public boolean overlapWithWorm(Position position, double radius) {
-		List<Worm> overlappingWorms = getOverlappingWormsWith(position, radius);
-		return  !overlappingWorms.isEmpty();
-	}
-	*/
-	
 }

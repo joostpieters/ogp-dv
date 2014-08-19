@@ -11,7 +11,7 @@ import worms.exceptions.*;
  * @invar The y-coordinate of each Position must be a valid y-coordinate.
  *      | isValidPosition(getY())
  *      
- * @author Delphine Vandamme & Pieter Noyens
+ * @author Delphine Vandamme 
  */
 @Value
 public class Position {
@@ -42,6 +42,12 @@ public class Position {
 		this.y = y;
 	}
 	
+	/**
+	 * Initialize this new position with given position.
+	 * @param  position
+	 *         The new position
+	 * @effect this(position.getX(),position.getY())
+	 */
 	public Position(Position position) {
 		this(position.getX(),position.getY());
 	}
@@ -123,13 +129,15 @@ public class Position {
 	}
 	
 	/**
-	 * Rotate this position by a given divergence,
-	 * about a position at a given distance and angle from this position.
+	 * Rotate this position by a given divergence, about a position at a given distance and angle from this position.
 	 * 
-	 * @param divergence
-	 * @param distance
-	 * @param angle
-	 * @return
+	 * @param  divergence
+	 *         The divergence to rotate by.
+	 * @param  distance
+	 *         The distance between this position and the end position.
+	 * @param  angle
+	 *         The angle between the horizontal x-axis and the line connecting this position and the end position.
+	 * @return result == new position(getX()+ distance*Math.cos(angle+divergence), getY() + distance*Math.sin(angle+divergence))
 	 */
 	public Position rotateBy(double divergence, double distance, double angle) {
 		double x = getX()+ distance*Math.cos(angle+divergence);
@@ -140,26 +148,30 @@ public class Position {
 	}
 
 	/**
+	 * Computes the slope (as an angle) of the distance between this position and the given position.
 	 * 
-	 * @param position
-	 * @return
+	 * @param  position
+	 *         The end position of the line
+	 * @return result == Math.atan2(position.getY() - this.getY(), position.getX() - this.getX())
 	 */
 	public double getSlope(Position position) {
 		double dx = position.getX() - this.getX();
 		double dy = position.getY() - this.getY();
-		return Math.atan(dy/dx);
+		return Math.atan2(dy, dx);
+		// atan2 determines in which quadrant (dx,dy) lies and gives the angle in that quadrant.
+		// If dx = 0, then result == (-)Pi/2 depending on dy.
 	}
 
 	/**
-	 * Return the distance between this position and the given position pos.
+	 * Return the distance between this position and the given position.
 	 * 
-	 * @param pos
-	 * @return
+	 * @param   pos
+	 *          The end position of the distance that needs to be calculated.
+	 * @return  result == (Math.sqrt( Math.pow((getX() - pos.getX()), 2) + Math.pow((getY() - pos.getY()), 2)))
 	 */
 	public double getDistanceTo(Position pos) {
 		return (Math.sqrt( Math.pow((getX() - pos.getX()), 2) + Math.pow((getY() - pos.getY()), 2)));
 		
 	}
-	
-	
+
 }
