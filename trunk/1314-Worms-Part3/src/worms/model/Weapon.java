@@ -2,14 +2,21 @@ package worms.model;
 import worms.exceptions.*;
 import be.kuleuven.cs.som.annotate.*;
 
+/**
+ * A class of weapons involving a worm.
+ *                  
+ * @author   Delphine Vandamme 
+ */
 public abstract class Weapon {
 	
-	public Weapon(Worm worm) 
-	  throws IllegalNameException{
+	/**
+	 * Initialize this new weapon.               
+	 */
+	public Weapon() {
 	}
 	
 	/**
-	 * Returns the name the worm.
+	 * Returns the name of the weapon.
 	 */
 	@Basic @Raw
 	public String getName() {
@@ -17,13 +24,13 @@ public abstract class Weapon {
 	}
 	
 	/**
-	 * Variable registering the name of the worm.
+	 * Variable registering the name of the weapon.
 	 */
 	private String name;
 	
 	/**
-	 * Return the worm to which this game object is attached.
-	 *   A null reference is returned if this game object is not attached to any worm.
+	 * Return the worm to which this weapon is attached.
+	 * A null reference is returned if this weapon is not attached to any worm.
 	 */
 	@Basic @Raw
 	public Worm getWorm() {
@@ -31,7 +38,7 @@ public abstract class Weapon {
 	}
 
 	/**
-	 * Check whether this game object can be attached to the given worm.
+	 * Check whether this weapon can be attached to the given worm.
 	 * 
 	 * @param  worm
 	 * 		   The worm to check.
@@ -43,7 +50,7 @@ public abstract class Weapon {
 	}
 	
 	/**
-	 * Check whether this game object has a proper worm to which it is attached.
+	 * Check whether this weapon has a proper worm to which it is attached.
 	 * 
 	 * @return result == ( canHaveAsWorm(getWorm()) && ( (getWorm() == null)
 	 *                     || getWorm().hasAsWeapon(this)))
@@ -55,10 +62,10 @@ public abstract class Weapon {
 	}
 	
 	/**
-	 * Set the worm to which this game object is attached to the given worm.
+	 * Set the worm to which this weapon is attached to the given worm.
 	 * 
 	 * @param worm
-	 * 		  The worm to attach this game object to.
+	 * 		  The worm to attach this weapon to.
 	 * @pre   if (worm != null) 
 	 *          then worm.hasAsWeapon(this)
 	 * @pre   if ( (worm == null) && (getWorm() != null) )
@@ -73,14 +80,19 @@ public abstract class Weapon {
 	}
 	
 	/**
-	 * Variable registering the worm to which this game object is attached.
+	 * Variable registering the worm to which this weapon is attached.
 	 */
 	private Worm worm = null;
 	
 	/**
+	 * Shoot a projectile with this weapon.
 	 * 
-	 * @param yield
+	 * @param  yield
+	 *         The yield used to shoot the weapon.
+	 * @effect getProjectile(yield)
+	 * @effect decreaseNbProjectilsWith(1)
 	 * @throws IllegalShootException
+	 *         ! canShoot()
 	 */
 	@SuppressWarnings("unused")
 	public void shoot(int yield) 
@@ -92,42 +104,43 @@ public abstract class Weapon {
 	}
 
 	/**
+	 * Returns whether or not this weapon can shoot, depending on the ammunition left.
 	 * 
-	 * @return
+	 * @return result == (getNbProjectiles() > 0) || (getNbProjectiles() == -1)
 	 */
 	private boolean canShoot() {
 		return (getNbProjectiles() > 0) || (getNbProjectiles() == -1);
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Returns the cost of shooting this weapon on the action points of the shooter.
 	 */
 	public abstract int costOfShooting();
 	
 	/**
-	 * 
-	 * @return
+	 * Returns the number of projectiles to shoot this weapon with.
 	 */
 	public abstract int getNbProjectiles();
 
 	/**
+	 * Decreases the number of projectiles (ammunition) to shoot this weapon with by the given amount of projectiles.
 	 * 
 	 * @param amount
+	 *        The nr of projectiles decrease the current nr of projectile by.
 	 */
 	public abstract void decreaseNbProjectilesWith(int amount);
 
 	/**
+	 * Returns the projectile.
 	 * 
 	 * @param yield
+	 *        the yield used to shoot the projectile.
 	 */
 	public abstract Projectile getProjectile(int yield);
 		 
 	/**
-	 * Terminate this weapon and its associated projectile if any.
+	 * Terminate this weapon.
 	 * @post new.isTerminated()
-	 * @post ! new.hasProjectile()
-	 * @post if (hasProjectile()) then (new getProjectile()).isTerminated()
 	 */
 	public void terminate() {
 		this.isTerminated = true;

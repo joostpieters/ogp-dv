@@ -2,7 +2,7 @@ package worms.programs.expressions;
 
 import worms.exceptions.IllegalTypeException;
 import worms.model.GameObject;
-import worms.model.MoveableGameObject;
+import worms.model.MobileGameObject;
 import worms.model.Program;
 import worms.programs.Expression;
 import worms.programs.Type;
@@ -29,11 +29,11 @@ public class GetDirExpression extends Expression<DoubleType> {
 			throw new IllegalTypeException();
 		
 		GameObject object = (GameObject) entity.evaluate().getValue();
-		if (! (object instanceof MoveableGameObject) ) 
+		if (! (object instanceof MobileGameObject) ) 
 			throw new IllegalTypeException();
-		MoveableGameObject moveableEntity = (MoveableGameObject) object;
+		MobileGameObject mobileEntity = (MobileGameObject) object;
 		
-		return new DoubleType( moveableEntity.getDirection() );
+		return new DoubleType( mobileEntity.getDirection() );
 	}
 
 }

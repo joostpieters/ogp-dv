@@ -1,30 +1,38 @@
 package worms.model;
 import java.util.List;
+
+import be.kuleuven.cs.som.annotate.Basic;
 import worms.exceptions.*;
 import worms.model.abilities.JumpAbility;
 
 /**
+ * A class of Projectiles involving a worm and a yield.
  * 
  * @author Delphine
  *
  */
-public abstract class Projectile extends MoveableGameObject implements JumpAbility {
+public abstract class Projectile extends MobileGameObject implements JumpAbility {
 
 	/**
-	 * 
-	 * @param worm
-	 * @param yield
-	 * @throws IllegalDirectionException
-	 * @throws IllegalPositionException
-	 * @throws IllegalRadiusException
-	 * @throws IllegalWeaponException
+	 * Initialize this new projectile with given worm and yield.
+	 *
+	 * @param  worm
+	 *         The worm that shoots this new projectile.
+	 * @param  yield
+	 *         The yield to shoot this new projectile with.
+	 * @effect super( worm.getWorld(), new Position(0,0), 0, worm.getDirection() )
+	 * @effect setForce(yield)
+	 * @effect setPosition(new Position( worm.getPosition().getX() + (worm.getRadius() + this.getRadius())*Math.cos(worm.getDirection()),
+	 * 									worm.getPosition().getY() + (worm.getRadius() + this.getRadius())*Math.sin(worm.getDirection())));
+	 * @effect setToActive(true);
+	 * @throws IllegalArgumentException
+	 *         ! Projectile.isValidYield(yield)
 	 */
-	public Projectile(Worm worm, int yield)  
-	  throws IllegalDirectionException, IllegalPositionException, IllegalRadiusException, IllegalWeaponException {
+	public Projectile(Worm worm, int yield) throws IllegalArgumentException {
 		super(worm.getWorld(), new Position(0,0), 0, worm.getDirection());
-		if (!Projectile.isValidYield(yield)) {
+		
+		if ( !Projectile.isValidYield(yield) ) 
 			throw new IllegalArgumentException("The given yield is not valid.");
-		}
 
 		setForce(yield);
 		double x = worm.getPosition().getX() + (worm.getRadius() + this.getRadius())*Math.cos(worm.getDirection());
@@ -39,16 +47,16 @@ public abstract class Projectile extends MoveableGameObject implements JumpAbili
 	 * @param  yield
 	 *         The yield to check.
 	 * @return True if and only if the yield is between 0 and 100.
-	 *       | result == yield > 0 && yield < 100
+	 *       | result == yield > 0 && yield <= 100
 	 */
 	public static boolean isValidYield(int yield) {
 		return (yield >= 0) && (yield <= 100);
 	}
 
-	
 	/**
 	 * Computes the radius of this projectile as a function of its mass.
-	 * @return radius
+	 * 
+	 * @return result == Math.cbrt((getMass() * 3.0) / (Projectile.DENSITY * 4.0 * Math.PI))
 	 */
 	@Override
 	public double getRadius() {
@@ -60,48 +68,59 @@ public abstract class Projectile extends MoveableGameObject implements JumpAbili
 	 */
 	private static final double DENSITY = 7800;
 	
+	/**
+	 * Returns the density of all projectiles.
+	 */
 	@Override
 	public double getDensity() {
 		return Projectile.DENSITY;
 	}
 	
+	/**
+	 * Returns the force exerted on the projectile.
+	 */
+	@Basic
 	public double getForce() {
 		return this.force;
 	}
 	
+	/**
+	 * Sets the force exerted on the projectile using the given yield.
+	 * 
+	 * @param yield
+	 *        The yield to shoot the projectile with.
+	 */
 	public abstract void setForce(int yield);
 	
+	/**
+	 * Variable registering the force exerted on the projectile.
+	 */
 	protected double force;
 	
+	/**
+	 * Returns the cost in hit points when a worm is hit by this projectile.
+	 */
 	public abstract int costInHitPoints();
     
 	/**
-	 * Returns whether or not the worm can jump.
+	 * Returns whether or not the projectile can jump.
 	 * 
-	 * @return True if and only if the number action points of 
-	 * 		   this worm is greater than the minimum number 
-	 * 		   of action points, the direction does not exceed Pi and is not less than zero.
-	 *       |  result == (getActionPoints() >= minActionPoints &&  getDirection() >= 0 
-	 *		 |		       && Util.fuzzyLessThanOrEqualTo(getDirection(), Math.PI)      
+	 * @return result == true    
 	 */
 	public boolean canJump(double timeStep) {
-		//return !(Util.fuzzyEquals(jumpTime(timeStep), 0) );
 		return true;
 	}
 	
 	/**
-	 * Changes the position of the worm as the result of a jump 
-	 * from the current position (x,y) and with respect to the 
-	 * worm’s direction and the number of remaining action points.
+	 * Changes the position of the projectile as the result of a jump from the current position.
 	 * 
-	 * @effect If the worm can jump, the jump distance is added to the
-	 * 		   current x-coordinate of the position of this worm.
-	 *  	 | getPosition().addToX(distanceJump())
-	 * @effect The number of action points of the worm is set to the minimum value.
-	 * 		 | setActionPoints(minActionPoints)
+	 * @effect setPosition( jumpStep(jumpTime(timeStep)) )
+	 * @effect for each worm in getWorld().getOverlappingObjectsOfType(Worm.class,positionAfterJump, getRadius()):
+	 *              worm.decreaseHitPoints(costInHitPoints())
+	 * @effect this.terminate()
+	 * @effect if (! canJump(timeStep) ) then this.terminate()
 	 * @throws IllegalJumpException
-	 *         The worm is unable to jump.
-	 *       | ! canJump() 
+	 *         ! canJump(timeStep) 
 	 */
 	public void jump(double timeStep)
 	   throws IllegalJumpException {
@@ -121,11 +140,13 @@ public abstract class Projectile extends MoveableGameObject implements JumpAbili
 	/**
 	 * Returns the above time for a potential jump from the current position.
 	 * 
-	 * @return The jump time equals the jump distance divided by the initial velocity.
-	 * 		 | result == distanceJump() / initialVelocityX()
-	 * @throws ArithmeticException
-	 *         Division by zero.
-	 *       | initialVelocityX() == 0
+	 * @param  timeStep
+	 *         Time interval
+	 * @return The in-flight position after a given time step. 
+	 * 		 | while ( !stopJump(tempPos) )  
+	 *       |      jumpTime += timeStep;
+	 *		 |      tempPos = jumpStep(jumpTime);
+	 *		 | result == jumpTime		 
 	 */
 	public double jumpTime(double timeStep) {
 		double jumpTime = timeStep;
@@ -137,6 +158,16 @@ public abstract class Projectile extends MoveableGameObject implements JumpAbili
 		return jumpTime;
 	}
 	
+	/**
+	 * Returns whether or not the jump needs to be interrupted.
+	 * 
+	 * @param  position
+	 *         The position to check.
+	 * @return result == ( getWorld().isImpassable(position, getRadius())
+		                  || getWorld().overlapWithObjectOfType(Worm.class, position, getRadius())
+		                  || (getPosition().getDistanceTo(position) > getRadius()
+                          && getWorld().isAdjacent(position, getRadius())) )
+	 */
 	public boolean stopJump(Position position) {
 		return ( getWorld().isImpassable(position, getRadius())
 		         || getWorld().overlapWithObjectOfType(Worm.class, position, getRadius())
@@ -145,22 +176,12 @@ public abstract class Projectile extends MoveableGameObject implements JumpAbili
 	}
 	
 	/**
-	 * Returns in-flight positions of a jumping worm at any dt seconds after launch.w
+	 * Returns in-flight positions of a jumping projectile at any dt seconds after launch.
 	 * 
 	 * @param  dt
-	 * 
-	 * ²
-	 * 		   Number of seconds after launch.
-	 * @return If the worm can jump, an array of the in-flight positions (xdt, ydt) is returned. 
-	 * 		   The x-position equals the sum of the current x-coordinate of the position, 
-	 *         and the product of the initial velocity and time dt. 
-	 *         The y-position equals the sum of the current y-coordinate of the position, 
-	 *         and the product of the initial velocity and time dt, diminished with (0.5*G*dt^2).
-	 *       | return == { (getPosition().getX() + (initialVelocityX()*dt)), 
-	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5*G*Math.pow(dt, 2)) }
-	 * @throws IllegalJumpException
-	 *         The action cannot be performed because the worm cannot jump.
-	 *       | ! canJump()
+     *         Time after launch.
+	 * @return return == new Position( (getPosition().getX() + (initialVelocityX()*dt)), 
+	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5* World.ACCELERATION*Math.pow(dt, 2)) )
 	 */
 	public Position jumpStep(double dt) {	
 		double initialVelocityX = initialVelocity() * Math.cos(getDirection());
@@ -171,10 +192,9 @@ public abstract class Projectile extends MoveableGameObject implements JumpAbili
 	}
 	
 	/**
-	 * Returns the initial velocity of the worm. 
+	 * Returns the initial velocity of the projectile. 
 	 * 
-	 * @return The initial velocity equals 0.5 times the force 
-	 *         on the worm divided by the mass of the worm.
+	 * @return The initial velocity equals 0.5 times the force on the worm divided by the mass of the projectile.
 	 *       | result == ( force() * 0.5 / getMass() )
 	 * @throws ArithmeticException
 	 *         Division by zero.

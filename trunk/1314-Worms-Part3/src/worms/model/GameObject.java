@@ -4,16 +4,16 @@ import worms.util.Util;
 import be.kuleuven.cs.som.annotate.*;
 
 /**
- * A class of game objects attached to worlds.
+ * A class of game objects attached to a world.
  * 
  * @invar  Each game object must have a proper world to which it is attached.
- * 		 | hasProperWorld()
- * @invar  The radius of each worm must be a valid radius for a worm.
+ * 		   | hasProperWorld()
+ * @invar  The radius of each game object must be a valid radius for a game object.
  *         | isValidRadius(getRadius())
- * @invar  The position of each worm must be a valid position for a worm.
+ * @invar  The position of each game object must be a valid position for a game object.
  *         | canHaveAsPosition(getPosition())  
  * 
- * @author Delphine
+ * @author Delphine Vandamme
  *
  */
 public abstract class GameObject {
@@ -23,24 +23,22 @@ public abstract class GameObject {
 	 * and given world to attach to.
 	 * 
 	 * @param  radius 
-	 * 		   The radius of the new worm (in meter)
+	 * 		   The radius of the new game object (in meter)
 	 * @param  world
-	 * 		   The world in which to place the created worm  
-	 * @param  x
-	 * 		   The x-coordinate of the position of this new worm (in meter)
-	 * @param  y
-	 * 	       The y-coordinate of the position of this new worm (in meter)
+	 * 		   The world in which to place the created game object  
+	 * @param  position
+	 * 		   The position of this new game object (in meter)
 	 * @effect if (world != null)
 	 *           then world.addAsGameObject(this)
-	 * @effect The position of this new worm is equal to a new Position(x,y), given x and y.
-     *       | setPosition(new Position(x,y))
-     * @effect The radius of this new worm is equal to the given radius.
+	 * @effect The position of this new game object is equal to the given position.
+     *       | setPosition(position)
+     * @effect The radius of this new game object is equal to the given radius.
      * 		 | setRadius(radius) 
      * @throws IllegalRadiusException
-	 * 		   The given radius is not a valid radius for a worm.
+	 * 		   The given radius is not a valid radius for a game object.
 	 *       | ! isValidRadius(radius) 
 	 * @throws IllegalPositionException
-	 * 		   The given position is not a valid position for a worm.
+	 * 		   The given position is not a valid position for a game object.
 	 *       | ! position.canHaveAsPosition(position)  
 	 */
 	@Raw @Model
@@ -93,7 +91,7 @@ public abstract class GameObject {
 	private Position position;
 	
 	/**
-	 * Returns the radius of the worm.
+	 * Returns the radius of the game object.
 	 */
 	@Basic @Raw
 	public double getRadius() {
@@ -101,14 +99,13 @@ public abstract class GameObject {
 	}
 	
 	/**
-	 * Check whether the given radius is a valid radius for a worm.
+	 * Check whether the given radius is a valid radius for a game object.
 	 * 
 	 * @param  radius
 	 *         The radius to check.
-	 * @return True if and only if the given radius is not below 
-	 * 		   the minimal radius and not above Double.POSITIVE_INFINITY .
+	 * @return True if and only if the given radius is not below the minimal radius and not above the maximal radius.
 	 *       | result == (radius >= getMinimalRadius()) 
-	 *                   && (radius <= Double.POSITIVE_INFINITY)
+	 *                   && (radius <= getMaximalRadius())
 	 */
 	public boolean canHaveAsRadius(double radius) {
 		return (Util.fuzzyGreaterThanOrEqualTo(radius, getMinimalRadius())) 
@@ -116,15 +113,15 @@ public abstract class GameObject {
 	}
 	
 	/**
-	 * Sets the radius of the worm to the given value.
+	 * Sets the radius of the game object to the given value.
 	 * 
 	 * @param  radius
-	 *		   The new radius for this worm.
-	 * @post   If the given radius is a valid radius for this worm, 
-	 *         the radius of this worm is equal to the given radius.
+	 *		   The new radius for this game object.
+	 * @post   If the given radius is a valid radius for this game object, 
+	 *         the radius of this game object is equal to the given radius.
      *       | new.getRadius() == radius
      * @throws IllegalRadiusException
-     * 		   The given radius is not a valid radius for any worm.  
+     * 		   The given radius is not a valid radius for any game object.  
      * 		 | ! isValidRadius(radius)    
 	 */
 	@Raw
@@ -135,24 +132,33 @@ public abstract class GameObject {
 		this.radius = radius;
 	}
 	
+	/**
+	 * Returns the minimal radius of a game object.
+	 */
+	@Basic 
 	public double getMinimalRadius() {
 		return 0.0;
 	}
 	
+	/**
+	 * Returns the maximal radius of a game object.
+	 */
+	@Basic
 	public double getMaximalRadius() {
 		return Double.POSITIVE_INFINITY;
 	}
 	
-	
 	/**
-	 * Variable registering the radius of the worm.
+	 * Variable registering the radius of the game object.
 	 */
 	private double radius;
 	
 	/**
-	 * Terminate this game object.
+	 * Terminate this game object by removing it from the world it is attached to.
 	 * 
-	 * @post new.isTerminated()
+	 * @effect getWorld().removeAsGameObject(this)
+	 * @effect setToActive(false)
+	 * @post   new.isTerminated()
 	 */
 	public void terminate() {
 		getWorld().removeAsGameObject(this);
@@ -163,7 +169,7 @@ public abstract class GameObject {
 	/**
 	 * Check whether this game object is terminated.
 	 */
-	@Basic @Raw
+	@Basic
 	public boolean isAlive() {
 		return (! this.isTerminated);
 	}
@@ -174,10 +180,12 @@ public abstract class GameObject {
 	private boolean isTerminated = false;
 	
 	/**
+	 * Activate or deactivate this game object.
 	 * 
-	 * @param 
+	 * @param isActive
+	 *        True to activate the game object, false to deactivate the game object.
+	 * @post  new.isActive() == isActive
 	 */
-	@Basic 
 	public void setToActive (boolean isActive) {
 		this.isActive =  isActive;
 	}
@@ -219,8 +227,7 @@ public abstract class GameObject {
 	/**
 	 * Check whether this game object has a proper world to which it is attached.
 	 * 
-	 * @return result == ( canHaveAsWorld(getWorld()) && ( (getWorld() == null)
-	 *                     || getWorld().hasAsGameObject(this)))
+	 * @return result == ( canHaveAsWorld(getWorld()) && ( (getWorld() == null) || getWorld().hasAsGameObject(this)))
 	 */
 	@Raw
 	public boolean hasProperWorld() {
