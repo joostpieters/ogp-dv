@@ -294,17 +294,18 @@ public class World {
 	 *         The radius of the circle to check 
 	 * @return True 
 	 *         if the given region is impassable, false otherwise.
+	 * @throws IllegalStateException
+	 *         ( (c < 0)|| (c >= this.map[0].length) || (r < 0)|| (r >= this.map.length) )
 	 */
-	public boolean isImpassable(Position position, double radius) 
-	  throws IllegalDimensionException, IllegalStateException {
+	public boolean isImpassable(Position position, double radius) throws IllegalStateException {
 		if (! isInWorld(position, radius) )
 			return true;
 		boolean passable = true;
 		double p1 = position.getY() - radius; double p2 = position.getY() + radius;
 	    double p3 = position.getX() - radius; double p4 = position.getX() + radius;
-		int row1 = map.length - ((int) Math.ceil(p1/getPixelHeight()));
+		int row1 = map.length - ((int) Math.floor(p1/getPixelHeight())) - 1;
 		int row2 = map.length - ((int) Math.ceil(p2/getPixelHeight()));
-		int col1 = ((int) Math.ceil(p3 / getPixelWidth())) - 1;
+		int col1 = ((int) Math.floor(p3 / getPixelWidth()));
 		int col2 = ((int) Math.ceil(p4 / getPixelWidth())) - 1;
 		for (int r = row2; r <= row1; r++) {
 			for (int c = col1; c <= col2; c++) {

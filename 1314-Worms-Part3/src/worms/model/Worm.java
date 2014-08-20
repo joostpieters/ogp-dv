@@ -369,14 +369,13 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	 *       | eat()
 	 * @effect If the worm can fall down, it falls down.
 	 *       | if (canFall()) then fall()
-	 * @throws IllegalJumpException
+	 * @throws IllegalStateException
 	 *         The worm is unable to jump.
 	 *       | ! canJump(timeStep) 
 	 */
-	public void jump(double timeStep)
-	   throws IllegalJumpException {
+	public void jump(double timeStep) throws IllegalStateException {
 		if (! canJump(timeStep))
-			throw new IllegalJumpException(); 
+			throw new IllegalStateException(); 
 		Position positionAfterJump = jumpStep(jumpTime(timeStep));
 		setPosition(positionAfterJump);
 		if (canFall())
@@ -394,9 +393,14 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	 * 		 | while ( !stopJump(tempPos) )  
 	 *       |      jumpTime += timeStep;
 	 *		 |      tempPos = jumpStep(jumpTime);
-	 *		 | result == jumpTime		 
+	 *		 | result == jumpTime	
+	 * @throws IllegalArgumentException
+	 *         The given time step is negative.
+	 *       | timeStep < 0
 	 */
-	public double jumpTime(double timeStep) {
+	public double jumpTime(double timeStep) throws IllegalArgumentException {
+		if (timeStep < 0)
+			throw new IllegalArgumentException("Time step cannot be negative.");
 		double jumpTime = timeStep;
 		Position tempPos = jumpStep(jumpTime);
 		while ( !stopJump(tempPos) ) {
@@ -436,8 +440,13 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	 *         and the product of the initial velocity and time dt, diminished with (0.5* World.ACCELERATION*dt^2).
 	 *       | return == new Position( (getPosition().getX() + (initialVelocityX()*dt)), 
 	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5* World.ACCELERATION*Math.pow(dt, 2)) )
+	 * @throws IllegalArgumentException
+	 *         The given time step is negative.
+	 *       | dt < 0
 	 */
 	public Position jumpStep(double dt) {
+		if (dt < 0)
+			throw new IllegalArgumentException("Time step cannot be negative.");
 		double initialVelocityX = initialVelocity() * Math.cos(getDirection());
 		double initialVelocityY = initialVelocity() * Math.sin(getDirection());
 		double xdt = getPosition().getX() + (initialVelocityX * dt);
@@ -654,8 +663,14 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	/**
 	 * Returns the name of the weapon that is currently active for the given worm,
 	 * or null if no weapon is active.
+	 * 
+	 * @return The name of the selected weapon.
+	 *        | if (selectedWeapon() != null) then result == selectedWeapon().getName()
+	 *        | else result == null
 	 */
 	public String getSelectedWeapon() {
+		if ( selectedWeapon() == null )
+			return null;
 		return selectedWeapon().getName();		
 	}	
 	

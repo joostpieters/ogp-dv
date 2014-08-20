@@ -153,7 +153,12 @@ public class Facade implements IFacade {
 	 * Makes the given worm fall down until it rests on impassable terrain again.
 	 */
 	public void fall(Worm worm) {
-		worm.fall();
+		try {
+			worm.fall();
+		}
+		catch (IllegalStateException exc) {
+			throw new ModelException("This worm fall");
+		}
 		
 	}
 
@@ -168,7 +173,12 @@ public class Facade implements IFacade {
 	 * Moves the given worm according to the rules in the assignment.
 	 */
 	public void move(Worm worm) {
-		worm.move();		
+		try {
+			worm.move();	
+		}
+		catch (IllegalStateException exc) {
+			throw new ModelException("Cannot move.");
+		}
 	}
 	
 	/**
@@ -181,10 +191,14 @@ public class Facade implements IFacade {
 	 * @throws ModelException
 	 */
 	public double[] getJumpStep(Worm worm, double t) {
-		double x = worm.jumpStep(t).getX();
-		double y = worm.jumpStep(t).getY();
-		double[] jumpStep = {x, y};
-		return jumpStep;
+		try {
+			Position position = worm.jumpStep(t);
+			double[] jumpStep = {position.getX(), position.getY()};
+			return jumpStep;
+		}
+		catch (IllegalArgumentException exc) {
+			throw new ModelException("Time step cannot be negative.");
+		}
 		
 	}
 	
@@ -201,8 +215,12 @@ public class Facade implements IFacade {
 	 */
 	public double getJumpTime(Worm worm, double timeStep) 
 		throws ModelException {
+		try {
 		  return worm.jumpTime(timeStep);
-		
+		}
+		  catch (IllegalArgumentException exc) {
+				throw new ModelException("Time step cannot be negative.");
+			}
 	}
 
 	/**
@@ -219,7 +237,7 @@ public class Facade implements IFacade {
 				try {
 					worm.jump(timeStep);
 				}
-				catch (IllegalJumpException exc) {
+				catch (IllegalStateException exc) {
 					throw new ModelException("This worm cannot jump.");
 				}
 	}
@@ -228,7 +246,12 @@ public class Facade implements IFacade {
 	 * Activates the next weapon for the given worm
 	 */
 	public void selectNextWeapon(Worm worm) {
-		worm.selectNextWeapon();
+		try {
+			worm.selectNextWeapon();
+		}
+		catch (IllegalStateException exc) {
+			throw new ModelException("The worm has no weapons.");
+		}
 	}
 
 	/**
@@ -262,10 +285,14 @@ public class Facade implements IFacade {
 	 *         x-coordinate and the second element the y-coordinate
 	 */
 	public double[] getJumpStep(Projectile projectile, double t) {
-		double x = projectile.jumpStep(t).getX();
-		double y = projectile.jumpStep(t).getY();
-		double[] jumpStep = {x, y};
-		return jumpStep;
+		try {
+			Position pos = projectile.jumpStep(t);
+			double[] jumpStep = {pos.getX(), pos.getY()};
+			return jumpStep;
+		}
+		catch (IllegalArgumentException exc) {
+			throw new ModelException("Time step cannot be negative.");
+		}
 	}
 
 	/**
@@ -280,7 +307,12 @@ public class Facade implements IFacade {
 	 * @return The time duration of the projectile's jump.
 	 */
 	public double getJumpTime(Projectile projectile, double timeStep) {
-		return projectile.jumpTime(timeStep);
+		try {
+			return projectile.jumpTime(timeStep);
+		}
+		catch (IllegalArgumentException exc) {
+			throw new ModelException("Time step cannot be negative.");
+		}
 	}
 
 	/**
@@ -297,7 +329,7 @@ public class Facade implements IFacade {
 		try {
 			projectile.jump(timeStep);
 		}
-		catch (IllegalJumpException exc) {
+		catch (IllegalStateException exc) {
 			throw new ModelException("This projectile cannot jump.");
 		}		
 	}
@@ -376,7 +408,6 @@ public class Facade implements IFacade {
 	 * Returns all the worms in the given world
 	 */
 	public Collection<Worm> getWorms(World world) {
-		//return world.getWorms();
 		return  world.getGameObjectsOfType(Worm.class);
 	}
 	
@@ -462,8 +493,16 @@ public class Facade implements IFacade {
 	 * (For single-student groups that do not implement food, this method should have no effect)
 	 */
 	public Food createFood(World world, double x, double y) {
+		try {
 		Food food = new Food(world, new Position(x,y));
 		return food;
+		}
+		catch(IllegalPositionException exc) {
+			throw new ModelException("Not a valid position!");
+		}
+		catch(IllegalRadiusException exc) {
+			throw new ModelException("Not a valid radius!");
+		}
 	}
 
 	/**
