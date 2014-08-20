@@ -2,7 +2,6 @@ package worms.model;
 import java.util.List;
 
 import be.kuleuven.cs.som.annotate.Basic;
-import worms.exceptions.*;
 import worms.model.abilities.JumpAbility;
 
 /**
@@ -119,14 +118,13 @@ public abstract class Projectile extends MobileGameObject implements JumpAbility
 	 *              worm.decreaseHitPoints(costInHitPoints())
 	 * @effect this.terminate()
 	 * @effect if (! canJump(timeStep) ) then this.terminate()
-	 * @throws IllegalJumpException
+	 * @throws IllegalStateException
 	 *         ! canJump(timeStep) 
 	 */
-	public void jump(double timeStep)
-	   throws IllegalJumpException {
+	public void jump(double timeStep) throws IllegalStateException {
 		if (! canJump(timeStep)) {
 			this.terminate();
-		    throw new IllegalJumpException();
+		    throw new IllegalStateException();
 		}
 		Position positionAfterJump = jumpStep(jumpTime(timeStep));
 		setPosition(positionAfterJump);
@@ -146,9 +144,14 @@ public abstract class Projectile extends MobileGameObject implements JumpAbility
 	 * 		 | while ( !stopJump(tempPos) )  
 	 *       |      jumpTime += timeStep;
 	 *		 |      tempPos = jumpStep(jumpTime);
-	 *		 | result == jumpTime		 
+	 *		 | result == jumpTime	
+	 * @throws IllegalArgumentException
+	 *         The given time step is negative.
+	 *       | timeStep < 0	 
 	 */
 	public double jumpTime(double timeStep) {
+		if (timeStep < 0)
+			throw new IllegalArgumentException("Time step cannot be negative.");
 		double jumpTime = timeStep;
 		Position tempPos = jumpStep(jumpTime);
 		while (!stopJump(tempPos) ) {
@@ -182,8 +185,13 @@ public abstract class Projectile extends MobileGameObject implements JumpAbility
      *         Time after launch.
 	 * @return return == new Position( (getPosition().getX() + (initialVelocityX()*dt)), 
 	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5* World.ACCELERATION*Math.pow(dt, 2)) )
+	 * @throws IllegalArgumentException
+	 *         The given time step is negative.
+	 *       | dt < 0
 	 */
-	public Position jumpStep(double dt) {	
+	public Position jumpStep(double dt) {
+		if (dt < 0)
+			throw new IllegalArgumentException("Time step cannot be negative.");
 		double initialVelocityX = initialVelocity() * Math.cos(getDirection());
 		double initialVelocityY = initialVelocity() * Math.sin(getDirection());
 		double xdt = getPosition().getX() + (initialVelocityX * dt);

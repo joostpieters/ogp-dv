@@ -302,14 +302,16 @@ public abstract class Character extends MobileGameObject {
 	 *       | if(canMove()) then setPosition(getMovePosition())
 	 * @effect If possible the character eats all overlapping game objects on the new position.
 	 *       | if(canMove()) then eat()
+	 * @throws IllegalStateException
+	 *         ! canMove()
 	 */
-	public void move() {
-		if (canMove()) {
-			Position newPos = getMovePosition();
-			decreaseActionPoints(costMove(newPos));
-			setPosition(newPos);
-			eat();
-		}
+	public void move() throws IllegalStateException {
+		if (! canMove())
+			throw new IllegalStateException("Cannot move!");
+		Position newPos = getMovePosition();
+		decreaseActionPoints(costMove(newPos));
+		setPosition(newPos);
+		eat();
 	}
 	
 	/**
@@ -502,16 +504,5 @@ public abstract class Character extends MobileGameObject {
 		super.setToActive(isActive);
 	}
 	
-	/**
-	 * Kill this character.
-	 * 
-	 * @effect If this character is the current player then the next turn in the world is started.
-	 * 		 | if (getWorld().getCurrentPlayer() == this) then getWorld().startNextTurn()
-	 * @effect Terminate this character.
-	 *       | super.terminate()
-	 */
-	@Override
-	public void terminate() {
-		super.terminate();
-	}
+
 }

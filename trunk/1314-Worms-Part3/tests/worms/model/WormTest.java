@@ -358,14 +358,14 @@ public class WormTest {
 		assertEquals(0, worm.getActionPoints());
 	}
 	 
-	@Test(expected = IllegalJumpException.class)
+	@Test(expected = IllegalStateException.class)
 	public void testJump_NoAP() throws Exception {
 		Worm worm = new Worm( world, new Position(1,1), 1, 0.25, "Test", null);
 		worm.setActionPoints(0);
 		worm.jump(1);
 	}
 	
-	@Test(expected = IllegalJumpException.class)
+	@Test(expected = IllegalStateException.class)
 	public void testJump_ImpassablePos() throws Exception {
 		Worm worm = new Worm( world, new Position(3,4), 1, 0.25, "Test", null);
 		worm.jump(1);
