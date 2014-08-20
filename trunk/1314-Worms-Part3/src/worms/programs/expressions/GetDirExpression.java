@@ -20,7 +20,7 @@ public class GetDirExpression extends Expression<DoubleType> {
 	}
 	
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == EntityType.class);
+		return (expression.evaluate().getType() == EntityType.class);
 	}
 
 	@Override

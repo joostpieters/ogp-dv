@@ -301,6 +301,8 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 		else if (hitPoints <= MINPOINTS) {
 			this.hitPoints = MINPOINTS;
 			terminate();
+			if (getWorld().getCurrentPlayer() == null && getWorld().hasStarted() && !getWorld().isGameFinished())
+				getWorld().startNextTurn();
 		}
 		else 
 			this.hitPoints = hitPoints;
@@ -379,8 +381,8 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 		setPosition(positionAfterJump);
 		if (canFall())
 			fall();	
-		setActionPoints(MINPOINTS);
 		eat();
+		setActionPoints(MINPOINTS);	
 	} 
 	
 	/**

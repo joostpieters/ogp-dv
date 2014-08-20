@@ -22,7 +22,7 @@ public class GreaterThanOrEqualToExpression extends Expression<BoolType> {
 	}
 
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == DoubleType.class);
+		return (expression.evaluate().getType() == DoubleType.class);
 	}
 	
 	@Override

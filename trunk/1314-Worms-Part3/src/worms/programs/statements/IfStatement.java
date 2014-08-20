@@ -26,7 +26,7 @@ public class IfStatement extends Statement {
 	}
 		
 	private boolean isValidType(Expression<? extends Type> condition) {
-		return (condition.getType() == BoolType.class);
+		return (condition.evaluate().getType() == BoolType.class);
 	}
 
 	@Override

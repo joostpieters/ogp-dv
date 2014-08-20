@@ -15,12 +15,11 @@ public class TurnStatement extends ActionStatement {
 
 	public TurnStatement(Program program, int line, int column, Expression<? extends Type> angle) {
 		super(program, line, column);
-		
 		this.angle = angle;
 	}
 
 	private boolean isValidType(Expression<? extends Type> angle) {
-		return (angle.getType() == DoubleType.class);
+		return (angle.evaluate().getType() == worms.programs.types.DoubleType.class);
 	}
 	
 	@Override

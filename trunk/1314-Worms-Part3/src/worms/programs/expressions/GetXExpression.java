@@ -18,8 +18,7 @@ public class GetXExpression extends Expression<DoubleType> {
 	}
 	
 	private boolean isValidType(Expression<? extends Type> expression) {
-		System.out.println(expression.getType());
-		return (expression.getType() == EntityType.class);
+		return (expression.evaluate().getType() == EntityType.class);
 	}
 
 	@Override

@@ -19,7 +19,7 @@ public class IsFoodExpression extends Expression<BoolType> {
 	}
 
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == EntityType.class);
+		return (expression.evaluate().getType() == EntityType.class);
 	}
 	
 	@Override

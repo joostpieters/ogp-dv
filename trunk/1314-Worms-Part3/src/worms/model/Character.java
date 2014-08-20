@@ -184,7 +184,8 @@ public abstract class Character extends MobileGameObject {
 			this.actionPoints = getMaxPoints();
 		else if (actionPoints <= MINPOINTS) {
 			this.actionPoints = MINPOINTS;
-			getWorld().startNextTurn();
+			if (getWorld().getCurrentPlayer() == this && !getWorld().isGameFinished())
+				getWorld().startNextTurn();
 		}
 		else 
 			this.actionPoints = actionPoints;
@@ -364,7 +365,9 @@ public abstract class Character extends MobileGameObject {
 		while ( canFall(tempPos) ) {
 			if ( !getWorld().isInWorld(tempPos, getRadius()) ) {
 				setPosition(tempPos); 
-				terminate(); 
+				terminate();
+				if (getWorld().getCurrentPlayer() == null && getWorld().hasStarted() && !getWorld().isGameFinished())
+					getWorld().startNextTurn();
 				return;
 			}
 			tempPos = tempPos.addToY(-step);
@@ -510,7 +513,5 @@ public abstract class Character extends MobileGameObject {
 	@Override
 	public void terminate() {
 		super.terminate();
-		if (getWorld().getCurrentPlayer() == this)
-			getWorld().startNextTurn();
 	}
 }
