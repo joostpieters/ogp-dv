@@ -1,20 +1,27 @@
 package worms.model;
 
 import static org.junit.Assert.*;
+
 import java.util.Random;
+
 import org.junit.Before;
 import org.junit.Test;
+
 import worms.model.Worm;
+import worms.model.programs.ParseOutcome;
+import worms.model.programs.ParseOutcome.Success;
 import worms.model.weapons.Bazooka;
 import worms.model.weapons.Rifle;
 import worms.util.Util;
 import worms.exceptions.*;
+import worms.gui.game.IActionHandler;
 
 public class WormTest { 
-	
+	private IFacade facade;
 	private static Worm worm;
 	private static World world;
 	private static Weapon someWeapon;
+	private Random random;
 	
 	private static final double EPS = Util.DEFAULT_EPSILON;
 	private static final boolean[][] passableMap = new boolean[][] {
@@ -26,13 +33,14 @@ public class WormTest {
 
 	@Before @SuppressWarnings("unused")
 	public void setUp() throws Exception {
-		Random random = new Random(3);
-		world = new World(5, 5, passableMap, random);
-		worm = new Worm( world, new Position(1.05,1.05), 0, 1, "Test", null);
+		facade = new Facade();
+		random = new Random(7357);
+		world = facade.createWorld(5.0, 5.0, passableMap, random);
+		worm = facade.createWorm(world, 1.05,1.05, 0, 1, "Test", null);
 		someWeapon = new Bazooka();
 		worm.addAsWeapon(someWeapon);
-		Worm otherWorm = new Worm( world, new Position(1,1), 0, 1, "Test1", null);
-		world.startGame();
+		Worm otherWorm = facade.createWorm(world, 1,1, 0, 1, "Test1", null);
+		facade.startGame(world);;
 	}
 	
 	@Test
@@ -476,6 +484,14 @@ public class WormTest {
 		assertEquals(AP-worm.costMove(new Position(1.25,1)), worm.getActionPoints(), EPS);
 		assertFalse(food.isAlive());
 	}
+	
+	@Test
+	public void testMove_LegalCase2() {
+		Worm worm = facade.createWorm(world, 1, 2, 0, 1, "Test", null);
+		facade.move(worm);
+		assertEquals(2, facade.getX(worm), EPS);
+		assertEquals(2, facade.getY(worm), EPS);
+	}
 	 
 	@Test
 	public void testCostMove_SingleCase() {
@@ -684,5 +700,21 @@ public class WormTest {
 	public void testShoot_OnImpassablePos() throws Exception {
 		Worm worm = new Worm( world, new Position(4,4), 0, 0.25, "Test", null);
 		worm.shoot(10);
+	}
+	
+	@Test
+	public void testProgram() {
+		IActionHandler handler = new SimpleActionHandler(facade);
+		World world = facade.createWorld(100.0, 100.0, new boolean[][] { {true}, {false} }, random);
+		ParseOutcome<?> outcome = facade.parseProgram("double x; while (x < 1.5) do {\nx := x + 0.1;\n}\n turn x;", handler);
+		assertTrue(outcome.isSuccess());
+		Program program = ((Success)outcome).getResult();
+		Worm worm = facade.createWorm(world, 50.0, 50.51, 0, 0.5, "Test", program);
+		facade.addNewWorm(world, null); // add another worm
+		double oldOrientation = facade.getOrientation(worm);
+		facade.startGame(world); // this will run the program
+		double newOrientation = facade.getOrientation(worm);
+		assertEquals(oldOrientation + 1.5, newOrientation, EPS);
+		assertNotEquals(worm, facade.getCurrentWorm(world)); // turn must end after executing program
 	}
 }

@@ -18,7 +18,7 @@ public class GetMaxAPExpression extends Expression<DoubleType> {
 	}
 	
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == WormEntityType.class);
+		return (expression.evaluate().getType() == WormEntityType.class);
 	}
 
 	@Override

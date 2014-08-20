@@ -17,7 +17,7 @@ public class NotExpression extends Expression<BoolType> {
 	}
 
 	private boolean isValidType(Expression<? extends Type> expression) {
-		 return (expression.getType() == BoolType.class);
+		 return (expression.evaluate().getType() == BoolType.class);
 	}
 
 	

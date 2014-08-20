@@ -22,7 +22,7 @@ public class ConditionalExpression extends Expression<Type> {
 	}
 
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == BoolType.class);
+		return (expression.evaluate().getType() == BoolType.class);
 	}
 	
 	@Override

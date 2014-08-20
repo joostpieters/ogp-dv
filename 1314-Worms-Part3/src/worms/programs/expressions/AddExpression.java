@@ -19,16 +19,16 @@ public class AddExpression extends Expression<DoubleType> {
 	}
 
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == DoubleType.class);
+		return (expression.evaluate().getClass() == DoubleType.class);
 	}
 
 	@Override
 	public DoubleType evaluate() {
 		if ( !isValidType(e1) || !isValidType(e2)) 
 			throw new IllegalTypeException();
+		
 		DoubleType double1 = (DoubleType) e1.evaluate();
 		DoubleType double2 = (DoubleType) e2.evaluate();
-		
 		return ( double1.add(double2) );
 	}
 

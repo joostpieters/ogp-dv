@@ -22,7 +22,6 @@ public class AssignmentStatement extends Statement {
 		Type global = getProgram().getGlobal(name);
 		if ( global.getType() != rhs.getType() )
 			throw new IllegalTypeException();
-		
 		global.setValue(rhs.evaluate().getValue());
 		
 	}

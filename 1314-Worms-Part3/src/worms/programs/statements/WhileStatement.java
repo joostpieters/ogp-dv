@@ -23,17 +23,16 @@ public class WhileStatement extends Statement {
 	}
 
 	private boolean isValidType(Expression<? extends Type> condition) {
-		return (condition.getType() == BoolType.class);
+		return (condition.evaluate().getType() == BoolType.class);
 	}
 	
 	@Override
 	public void execute(int line, int column) {
 		if ( ! isValidType(condition) ) 
 			throw new IllegalTypeException();
-		BoolType condition = (BoolType) this.condition.evaluate();
-		
-		while ( condition.getValue() ) 
+		while ( ((BoolType) this.condition.evaluate()).getValue() ) {
 			body.execute(line, column);
+		}
 	}
 
 }

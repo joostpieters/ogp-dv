@@ -7,7 +7,7 @@ import worms.programs.Type;
 
 public class DoubleType extends Type {
 	
-	private double value;
+	private double value=0;
 	
 	public DoubleType(double value) {
 		this.value = value;

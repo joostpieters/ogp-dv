@@ -286,7 +286,8 @@ public class WorldTest {
 	public void testGetGoOfType_NotAlive() {
 		World newWorld = new World(5, 5, passableMap, random);
 		Worm wormpje = new Worm( newWorld, world.getRandomAdjacentPosition(0.5), 0, 0.5, "Bob", null);
-		wormpje.terminate();
+		newWorld.startGame();
+		wormpje.terminate(); 
 		assertFalse(newWorld.getGameObjectsOfType(Worm.class).contains(wormpje));
 	}
 	
@@ -386,8 +387,10 @@ public class WorldTest {
 		World newWorld = new World(5, 5, passableMap, random);
 		Mole mole = new Mole( newWorld, world.getRandomAdjacentPosition(0.5), 0, 0.5, "Bob Bob", null);
 		Worm wormpje = new Worm( newWorld, world.getRandomAdjacentPosition(0.5), 0, 0.5, "Bob", null);
+		@SuppressWarnings("unused")
+		Worm wormpie = new Worm( newWorld, world.getRandomAdjacentPosition(0.5), 0, 0.5, "Bob1", null);
 		newWorld.startGame();
-		mole.terminate();
+		mole.terminate(); newWorld.startNextTurn();
 		assertEquals(wormpje, newWorld.getCurrentPlayer() );
 	}
 	

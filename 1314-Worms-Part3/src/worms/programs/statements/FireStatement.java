@@ -20,7 +20,7 @@ public class FireStatement extends ActionStatement {
 	}
 	
 	private boolean isValidType(Expression<? extends Type> yield) {
-		return (yield.getType() == DoubleType.class);
+		return (yield.evaluate().getType() == DoubleType.class);
 	}
 	
 	@Override

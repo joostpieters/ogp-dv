@@ -19,7 +19,7 @@ public class MulExpression extends Expression<DoubleType> {
 	}
 
 	private boolean isValidType(Expression<? extends Type> expression) {
-		return (expression.getType() == DoubleType.class);
+		return (expression.evaluate().getType() == DoubleType.class);
 	}
 
 	@Override
@@ -28,7 +28,6 @@ public class MulExpression extends Expression<DoubleType> {
 			throw new IllegalTypeException();
 		DoubleType double1 = (DoubleType) e1.evaluate();
 		DoubleType double2 = (DoubleType) e2.evaluate();
-		
 		
 		return double1.multiplyBy( double2 );
 	}

@@ -80,7 +80,7 @@ public class Program {
 	 */
 	public void setGlobals(Map<String, Type> globals) {
 		for ( Map.Entry<String, Type> entry : globals.entrySet() ) {
-			 this.globals.put(entry.getKey(), entry.getValue());
+			this.globals.put(entry.getKey(), entry.getValue());
 		}
 	}
 	
