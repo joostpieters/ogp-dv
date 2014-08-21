@@ -140,8 +140,8 @@ public class Position {
 	 * @return result == new position(getX()+ distance*Math.cos(angle+divergence), getY() + distance*Math.sin(angle+divergence))
 	 */
 	public Position rotateBy(double divergence, double distance, double angle) {
-		double x = getX()+ distance*Math.cos(angle+divergence);
-		double y = getY() + distance*Math.sin(angle+divergence);
+		double x = getX() + distance * Math.cos(angle+divergence);
+		double y = getY() + distance * Math.sin(angle+divergence);
 		if (! isValidPosition(x) || ! isValidPosition(y))
 			throw new IllegalPositionException(this);
 		return new Position(x, y);

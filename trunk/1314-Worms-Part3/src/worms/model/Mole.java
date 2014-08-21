@@ -139,8 +139,8 @@ public class Mole extends Character {
 	/**
 	 * Returns the position to which the mole can move.
 	 * 
-	 * @return result == new position(getPosition().addToX(getRadius()/3*Math.cos(getDirection())).getX(), 
-	 *  							  getPosition().addToY(getRadius()/3*Math.sin(getDirection())).getY() )
+	 * @return result.getX() = getPosition().addToX(getRadius()/3*Math.cos(getDirection())).getX()
+	 * @return result.getY() = getPosition().addToY(getRadius()/3*Math.sin(getDirection())).getY() 
 	 */
 	@Override
 	public Position getMovePosition() {
