@@ -544,12 +544,19 @@ public class World {
 	/**
 	 * Starts the next turn in this world.
 	 * 
-	 * @effect activeCharacter.setToActive(false)
-	 * @effect if (index != characters.size()) 
-	 *            then characters.get( characters.indexOf(activeCharacter) + 1 ).setToActive(true)
+	 * @effect if (activeCharacter != null) then activeCharacter.setToActive(false)
+	 * @effect if (index == characters.size()) 
+	 *            then setIndexOfCurrentPlayer(0)
 	 * @effect if (index == characters.size()) 
 	 *            then characters.get(0).setToActive(true)
-	 * @effect setIndexOfCurrentPlayer(index)
+	 * @effect if (index != characters.size() && (activeCharacter != null)) 
+	 *            then characters.get( getIndexOfCurrentPlayer() + 1 ).setToActive(true)
+	 * @effect if (index != characters.size() && (activeCharacter != null)) 
+	 *            then setIndexOfCurrentPlayer( getIndexOfCurrentPlayer() + 1 )
+	 * @effect if (index != characters.size() && (activeCharacter == null)) 
+	 *            then characters.get( getIndexOfCurrentPlayer() ).setToActive(true)
+	 * @effect if (index != characters.size() && (activeCharacter == null)) 
+	 *            then setIndexOfCurrentPlayer( getIndexOfCurrentPlayer() )
 	 * @effect if (nextCharacter.hasProgram()) then ( nextCharacter.getProgram().execute() )
 	 * @effect if (nextCharacter.hasProgram()) then ( startNextTurn() )
 	 */
