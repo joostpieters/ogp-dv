@@ -126,15 +126,14 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	 * Returns the position to which the worm can move.
 	 * 
 	 * @return If an effective adjacent or passable position is found, it is returned. 
-	 *       | Position adjacentOrPassablePos = getWorld().getAdjacentorPassablePositionTo(this, getRadius());
-	 *		 | if ( adjacentOrPassablePos != null ) then result == adjacentOrPassablePos;
+	 *       | if ( adjacentOrPassablePos != null ) then ( getWorld.isAdjacent(result, getRadius()) 
+	 *       |                                             || !getWorld().isImpassable(result, getRadius()) );
 	 * @return Else if a nearby position outside of the world is found, this is returned.
-	 *       | Position impassablePos = getPosition().addToX(getRadius()*Math.cos(getDirection())).addToY(getRadius()*Math.sin(getDirection()))
-	 *       | if ( adjacentOrPassablePos == null ) && ( !getWorld().isInWorld(impassablePos, getRadius() )
-	 *       |    then result == impassablePos
+	 *       | if ( adjacentOrPassablePos == null ) && ( impassablePos != null )
+	 *       |    then ( !getWorld().isInWorld(result, getRadius() )
 	 * @return Otherwise, a null position is returned.
-	 *       | if ( adjacentOrPassablePos == null ) && ( getWorld().isInWorld(impassablePos, getRadius() )  
-	 *       |    then result == null
+	 *       | if ( adjacentOrPassablePos == null ) && ( impassablePos == null )  
+	 *       |    then (result == null)
 	 *      
 	 */
 	@Override
@@ -159,8 +158,7 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	 * 		   The new position to which the worm wants to move.
 	 * @return The cost of moving the worm to the given position rounded up to the next integer 
 	 *         depending on the slope (angle) between the current and given position.
-	 *       | double slope = getPosition().getSlope(nextPosition)
-	 * 	     | result == ( (int)  Math.ceil((Math.abs(Math.cos(slope)) + 4 * Math.abs(Math.sin(slope)))) ) 
+	 *       | result == ( (int)  Math.ceil((Math.abs(Math.cos(slope)) + 4 * Math.abs(Math.sin(slope)))) ) 
 	 */
 	@Override
 	public int costMove(Position nextPosition) {
@@ -438,8 +436,8 @@ public class Worm extends Character implements JumpAbility, ShootAbility {
 	 *         and the product of the initial velocity and time dt. 
 	 *         The y-position equals the sum of the current y-coordinate of the position, 
 	 *         and the product of the initial velocity and time dt, diminished with (0.5* World.ACCELERATION*dt^2).
-	 *       | return == new Position( (getPosition().getX() + (initialVelocityX()*dt)), 
-	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5* World.ACCELERATION*Math.pow(dt, 2)) )
+	 *       | result.getX() == getPosition().getX() + (initialVelocity() * Math.cos(getDirection()) * dt)
+	 *       | result.getY() == getPosition().getY() + (initialVelocity() * Math.sin(getDirection()) * dt) - 0.5 * World.ACCELERATION * Math.pow(dt, 2)
 	 * @throws IllegalArgumentException
 	 *         The given time step is negative.
 	 *       | dt < 0

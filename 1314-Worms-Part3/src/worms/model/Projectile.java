@@ -183,8 +183,8 @@ public abstract class Projectile extends MobileGameObject implements JumpAbility
 	 * 
 	 * @param  dt
      *         Time after launch.
-	 * @return return == new Position( (getPosition().getX() + (initialVelocityX()*dt)), 
-	 *                     (getPosition().getY() + (initialVelocityY()*dt) - 0.5* World.ACCELERATION*Math.pow(dt, 2)) )
+	 * @return result.getX() == getPosition().getX() + (initialVelocity() * Math.cos(getDirection()) * dt)
+	 *         result.getY() == getPosition().getY() + (initialVelocity() * Math.sin(getDirection()) * dt) - 0.5 * World.ACCELERATION * Math.pow(dt, 2)	 
 	 * @throws IllegalArgumentException
 	 *         The given time step is negative.
 	 *       | dt < 0

@@ -216,7 +216,25 @@ public class World {
 	 *         Mobile game object which determines the region in which the position is to be found.
 	 * @param  maxDistance
 	 *         The maximal distance between the position of the game object and the new position.
-	 * @return result == for each 
+	 * @return if ( (!isAdjacent(tempPos,radius) && (tempPosDiverged == null) && (passablePos == null) ) 
+	 *            then result == null
+	 * @return if ( (!isAdjacent(tempPos,radius) && (tempPosDiverged == null) && (passablePos != null) ) 
+	 *            then 
+	 *            	!isImpassable(result, radius) && 
+	 *            	(result.getDistanceTo(currentPos) <= maxDistance) && 
+	 *            	(result.getDistanceTo(currentPos) >= 0.1) 
+	 * @return if ( isAdjacent(tempPos,radius) )
+	 *            then 
+	 *            	isAdjacent(result, radius) && 
+	 *            	(result.getDistanceTo(currentPos) <= maxDistance) && 
+	 *            	(result.getDistanceTo(currentPos) >= 0.1) 
+	 * @return if ( (!isAdjacent(tempPos,radius)) && (tempPosDiverged != null) )
+	 *            then 
+	 *            	isAdjacent(result, radius) && 
+	 *              (result.getDistanceTo(currentPos) <= maxDistance) && 
+	 *              (result.getDistanceTo(currentPos) >= 0.1) &&
+	 *              (currentPos.getSlope(result) - currentPos.getDirection() <= 0.7875)
+	 *
 	 */
 	public Position getAdjacentorPassablePositionTo(MobileGameObject object, double maxDistance) {
 		double radius = object.getRadius(); 
@@ -295,7 +313,7 @@ public class World {
 	 * @return True 
 	 *         if the given region is impassable, false otherwise.
 	 * @throws IllegalStateException
-	 *         ( (c < 0)|| (c >= this.map[0].length) || (r < 0)|| (r >= this.map.length) )
+	 *        | ( (c < 0)|| (c >= this.map[0].length) || (r < 0)|| (r >= this.map.length) )
 	 */
 	public boolean isImpassable(Position position, double radius) throws IllegalStateException {
 		if (! isInWorld(position, radius) )
@@ -526,8 +544,7 @@ public class World {
 	/**
 	 * Starts the next turn in this world.
 	 * 
-	 * @effect activeCharacter = getCurrentPlayer()
-	 * 		   activeCharacter.setToActive(false)
+	 * @effect activeCharacter.setToActive(false)
 	 * @effect if (index != characters.size()) 
 	 *            then characters.get( characters.indexOf(activeCharacter) + 1 ).setToActive(true)
 	 * @effect if (index == characters.size()) 
@@ -585,8 +602,7 @@ public class World {
 	/**
 	 * Returns the current player in this world.
 	 * 
-	 * @return  List<Character> characters = getGameObjectsOfType(Character.class)
-	 * 			for each character in characters :
+	 * @return  for each character in characters :
 	 *             ( characters.contains(character) == this.hasAsGameObject(character) && Character.class.isInstance(character) &&
 	 *                                              character.isActive() && character.isAlive() )
 	 *         if (!characters.isEmpty()) then result == characters.get(0)
